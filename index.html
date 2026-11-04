@@ -4,18 +4,18 @@
     <meta charset="UTF-8" />
     <!-- ピンチ拡大は許可する（user-scalable=no / maximum-scale は入れない）。ダブルタップ拡大は CSS の touch-action で防ぐ -->
     <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
-    <meta name="theme-color" content="#0c1216" />
+    <meta name="theme-color" content="#101a30" />
     <meta name="app-id" content="__APP_ID__" />
-    <meta name="description" content="千葉のカラオケを歌う2曲を収めたデジタルシングルCD『チョコミントの残像』" />
+    <meta name="description" content="コンピレーションアルバム『ニコラケイジと木曽と私』を聴くためのデジタルCDアルバム" />
     <meta name="color-scheme" content="dark only" />
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <!-- iPhone のホーム画面アプリ: ステータスバーは不透明にする（black-translucent だと上端の内容がぼやける） -->
     <meta name="apple-mobile-web-app-status-bar-style" content="black" />
-    <meta name="apple-mobile-web-app-title" content="チョコミントの残像 ― デジタルシングルCD" />
+    <meta name="apple-mobile-web-app-title" content="ニコラケイジと木曽と私 ― デジタルCDアルバム" />
     <link rel="icon" type="image/png" href="icons/icon-192.png" />
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
-    <title>チョコミントの残像 ― デジタルシングルCD</title>
+    <title>ニコラケイジと木曽と私 ― デジタルCDアルバム</title>
   </head>
   <body>
     <!-- 表ジャケット -->
@@ -31,7 +31,6 @@
         <div class="abtn"><button class="icon-btn main" id="btn-play-all" aria-label="全曲再生"><svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg></button><span>再生</span></div>
         <div class="abtn"><button class="icon-btn" id="btn-open-booklet" aria-label="ブックレット"><svg viewBox="0 0 24 24"><path d="M12 6.2C10.2 4.7 7.8 4.2 4 4.2v13.6c3.8 0 6.2.5 8 2 1.8-1.5 4.2-2 8-2V4.2c-3.8 0-6.2.5-8 2z"/><path d="M12 6.2v13.6"/></svg></button><span>ブックレット</span></div>
       </div>
-      <button id="install-open-cover" type="button" class="link cover-install">📲 アプリとしてインストールする方法</button>
     </section>
 
     <!-- 裏ジャケット -->
@@ -50,7 +49,7 @@
       <!-- バージョン表示とインストール入口は、カバー画面を汚さないよう奥付のあるブックレットの末尾に置く（CLAUDE.md の方針参照） -->
       <div class="book-foot">
         <button id="install-open" type="button" class="link">📲 アプリとしてインストールする方法</button>
-        <p class="muted version" id="version-line">デジタルシングルCD v<span id="version"></span></p>
+        <p class="muted version" id="version-line">デジタルCDアルバム v<span id="version"></span></p>
       </div>
     </section>
 
@@ -66,7 +65,7 @@
             <div class="abtn"><button class="icon-btn" id="btn-prev" aria-label="前の曲"><svg viewBox="0 0 24 24"><path d="M7 5v14"/><path d="M19 5l-9 7 9 7z" fill="currentColor" stroke="none"/></svg></button><span>前</span></div>
             <div class="abtn"><button class="icon-btn" id="btn-play" aria-label="再生／一時停止"><svg viewBox="0 0 24 24"><path id="play-ic" d="M8 5v14l11-7z" fill="currentColor" stroke="none"/></svg></button><span id="play-lb">再生</span></div>
             <div class="abtn"><button class="icon-btn" id="btn-next" aria-label="次の曲"><svg viewBox="0 0 24 24"><path d="M17 5v14"/><path d="M5 5l9 7-9 7z" fill="currentColor" stroke="none"/></svg></button><span>次</span></div>
-            <div class="abtn"><button class="icon-btn" id="btn-repeat" aria-label="リピート: 全曲"><svg viewBox="0 0 24 24"><polyline points="17 1 21 5 17 9"/><path d="M3 11V9a4 4 0 0 1 4-4h14"/><polyline points="7 23 3 19 7 15"/><path d="M21 13v2a4 4 0 0 1-4 4H3"/></svg><span class="rep-one" hidden>1</span></button><span id="repeat-lb">全曲リピート</span></div>
+            <div class="abtn"><button class="icon-btn" id="btn-tracks2" aria-label="曲目"><svg viewBox="0 0 24 24"><path d="M8.5 6h12M8.5 12h12M8.5 18h12"/><circle cx="4" cy="6" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="12" r="1.2" fill="currentColor" stroke="none"/><circle cx="4" cy="18" r="1.2" fill="currentColor" stroke="none"/></svg></button><span>曲目</span></div>
           </div>
         </div>
         <div class="lyrics-wrap">
