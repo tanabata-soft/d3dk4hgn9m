@@ -31,6 +31,8 @@ test('曲目画面の上部はホームアイコンボタンで、押すと表�
   await page.goto('/');
   await page.getByRole('button', { name: '曲目' }).first().click();
   await expect(page.locator('#view-tracks')).toBeVisible();
+  // 曲目画面の上部はブックレットと同じ帯で、中央に「曲目」、左にホームボタン
+  await expect(page.locator('#view-tracks .bar .ttl')).toHaveText('曲目');
   await page.getByRole('button', { name: 'ジャケットへ戻る' }).click();
   await expect(page.locator('#view-cover')).toBeVisible();
 });
