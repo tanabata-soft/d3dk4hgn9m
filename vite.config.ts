@@ -6,7 +6,7 @@ import { VitePWA } from 'vite-plugin-pwa';
 const { version, name: appId } = JSON.parse(readFileSync(new URL('./package.json', import.meta.url), 'utf8')) as { version: string; name: string };
 
 // アプリ名・色はここと index.html の2か所だけ。新しいアプリを作るときに書き換える。
-const APP_NAME = 'ニコラケイジと木曽と私 ― デジタルCDアルバム';
+const APP_NAME = 'ニコラスケイジと木曽と私 ― デジタルCDアルバム';
 const THEME_COLOR = '#101a30';
 const BACKGROUND_COLOR = '#101a30';
 // 音源の実行時キャッシュ名。src/download.ts（初回一括ダウンロード）も同じ名前を使う（define で埋め込む）。
@@ -36,7 +36,7 @@ export default defineConfig({
       manifest: {
         name: APP_NAME,
         short_name: '木曽と私',
-        description: 'コンピレーションアルバム『ニコラケイジと木曽と私』を聴くためのデジタルCDアルバム',
+        description: 'コンピレーションアルバム『ニコラスケイジと木曽と私』を聴くためのデジタルCDアルバム',
         lang: 'ja',
         display: 'standalone',
         start_url: './',

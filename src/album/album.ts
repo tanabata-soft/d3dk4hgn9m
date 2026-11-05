@@ -11,7 +11,7 @@ export const ALBUM: {
   printedBackList?: boolean;
 } = {
   /** アルバムの題名 */
-  title: 'ニコラケイジと木曽と私',
+  title: 'ニコラスケイジと木曽と私',
   /** カタログ番号 */
   catalog: 'NK-001',
   /** 形式の呼び名 */
