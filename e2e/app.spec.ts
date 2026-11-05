@@ -27,6 +27,14 @@ test('表ジャケットが開き、タップで裏面に反転する', async ({
   await expect(page.locator('#flip')).not.toHaveClass(/flipped/);
 });
 
+test('曲目画面の上部はホームアイコンボタンで、押すと表ジャケットに戻る', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '曲目' }).first().click();
+  await expect(page.locator('#view-tracks')).toBeVisible();
+  await page.getByRole('button', { name: 'ジャケットへ戻る' }).click();
+  await expect(page.locator('#view-cover')).toBeVisible();
+});
+
 test('曲目から曲を選ぶと再生画面にその曲と歌詞が出る', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: '曲目' }).first().click();
@@ -38,6 +46,31 @@ test('曲目から曲を選ぶと再生画面にその曲と歌詞が出る', as
   await expect(page.locator('body')).toHaveAttribute('data-track', '2');
   const lines = await page.locator('#lyrics-box p').count();
   expect(lines).toBeGreaterThan(10);
+});
+
+test('再生中に表紙の再生ボタンを押すと、再生中の曲の画面に飛ぶだけで再生し直さない', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '曲目' }).first().click();
+  await page.locator('#tracklist .trow').nth(2).click();
+  await expect(page.locator('#view-player')).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-track', '2');
+  await page.evaluate(() => {
+    const a = document.querySelector('audio');
+    if (a) a.currentTime = 20;
+  });
+  await page.waitForTimeout(400);
+  await page.getByRole('button', { name: 'トップに戻る' }).click();
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.getByRole('button', { name: '全曲再生' }).click();
+  await expect(page.locator('#view-player')).toBeVisible();
+  await expect(page.locator('#p-title')).toContainText('銀幕の木曽路');
+  await expect(page.locator('body')).toHaveAttribute('data-track', '2');
+  const state = await page.evaluate(() => {
+    const a = document.querySelector('audio');
+    return a ? { t: a.currentTime, paused: a.paused } : { t: -1, paused: true };
+  });
+  expect(state.paused).toBe(false);
+  expect(state.t).toBeGreaterThan(19);
 });
 
 test('再生と一時停止で表示が切り替わる', async ({ page }) => {

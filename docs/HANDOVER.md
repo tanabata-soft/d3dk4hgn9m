@@ -2,14 +2,17 @@
 
 作業の区切りごとに書き直す(次の作業を始める人や AI が、ここだけ読めば再開できるように)。古くなった内容は消し、今の状態だけを残す。
 
-更新: 2026-11-04・版 v1.1.10(ブックレットの歌詞タップ表記を削除)
+更新: 2026-11-05・版 v1.1.13
 
 ## 今の状態
 
-- デジタルCDアルバムは PWA テンプレート構成(Vite + TypeScript + vite-plugin-pwa)。公開は GitHub Actions → GitHub Pages(リポジトリ `tanabata-soft/d3dk4hgn9m`)、URL は https://tanabata-soft.github.io/nicholas-kiso-album/ 。
+- デジタルCDアルバムは PWA テンプレート構成(Vite + TypeScript + vite-plugin-pwa)。公開は GitHub Actions → GitHub Pages(リポジトリ `tanabata-soft/d3dk4hgn9m`)、URL は https://tanabata-soft.github.io/d3dk4hgn9m/ 。
 - **エンジンとデータを分離した(v1.1.0)**: 作品データは `src/album/`(album.ts=題名・カタログ・ライナー・奥付、tracks.ts=曲目・解説、sync.ts=歌詞の同期データ(生成物)、media.ts=画像・音源の対応、assets=画像と音源)に集約。エンジン(`src/` のそのほか)は `src/album/` だけを参照する。新しいアルバムはデータ差し替えだけで作れる(手順: `docs/PRODUCTION.md`)。
 - Service Worker は vite-plugin-pwa の自動生成。「更新」ボタン方式。音源は実行時キャッシュ(CacheFirst、キャッシュ名 `kiso-album-audio`)、画像は事前キャッシュ。
 - 移行前の手書き版一式は、作業フォルダの `../app/`(移行元)と Git の旧コミットに残っている。
+
+- **v1.1.13 の変更（オーナー指示、2026-11-05）**: ①曲目画面上部の「‹ ジャケット」テキストリンクを、再生画面と同じ家の形の丸いアイコンボタンに変更（aria-label「ジャケットへ戻る」、46px）。②表紙の「全曲再生」ボタンは、すでに再生中（または一時停止中）のときは最初から再生し直さず、再生中の曲の再生画面へ戻るだけにした（全曲終了後の押下は従来どおり1曲目から）。どちらも e2e で振る舞いを固定済み。
+- v1.1.12: 正式タイトル『ニコラスケイジと木曽と私』への表記統一（題字・アイコン再生成）。v1.1.11: 表ジャケットを候補A3の一枚絵にし、裏面は印刷曲目リスト入りのモザイクに変更（`printedBackList: true`）。
 
 ## やりかけ
 

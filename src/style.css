@@ -86,7 +86,8 @@ button { font-family: inherit; cursor: pointer; }
 #view-tracks { background: linear-gradient(180deg, #131f3a, #0d1526); align-items: center; }
 .backcover { padding: 10px 20px calc(30px + env(safe-area-inset-bottom)); max-width: 560px; margin: 0; width: 100%; }
 .view-top { width: 100%; max-width: 560px; padding: calc(var(--safe-top) - 14px) 20px 0; }
-.backonly { background: none; border: none; color: #dfe8f5; font-size: 15px; padding: 8px 4px; cursor: pointer; font-family: inherit; letter-spacing: .06em; }
+.view-top .icon-btn { width: 46px; height: 46px; }
+.view-top .icon-btn svg { width: 21px; height: 21px; }
 .backcover h2 { font-size: 20px; letter-spacing: .08em; margin-bottom: 4px; }
 .backcover .bc-sub { color: var(--sub); font-size: 12px; letter-spacing: .2em; margin-bottom: 18px; }
 .trow { display: flex; align-items: baseline; gap: 12px; padding: 13px 6px; border-bottom: 1px dotted rgba(255,255,255,.22); cursor: pointer; }
