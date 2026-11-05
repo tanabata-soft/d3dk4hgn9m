@@ -138,7 +138,12 @@ function buildTracklist(el: HTMLElement | null, jump: boolean): void {
   });
 }
 buildTracklist($('#tracklist'), true);
-buildTracklist($('#tracklist2'), false);
+if (ALBUM.printedBackList) {
+  // 裏ジャケットに曲目リストが印刷済みの作品では、裏面の重ねリストは出さない（印刷に一本化）
+  document.querySelector('#tracklist2')?.remove();
+} else {
+  buildTracklist($('#tracklist2'), false);
+}
 $('#bc-foot').textContent = FOOT_NOTE;
 
 /* ---------- ジャケットの反転（表⇔裏） ---------- */
