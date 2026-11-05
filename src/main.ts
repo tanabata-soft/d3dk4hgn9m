@@ -108,7 +108,14 @@ if (!SINGLE)
     renderPage(0);
     go('booklet');
   });
-$('#btn-play-all').addEventListener('click', () => playTrack(0, true));
+$('#btn-play-all').addEventListener('click', () => {
+  // すでに再生中（または一時停止中）のときは、最初から再生し直さず再生画面へ戻るだけにする（オーナー指示 2026-11-05）
+  if (cur >= 0 && !audio.ended) {
+    go('player');
+    return;
+  }
+  playTrack(0, true);
+});
 if (!SINGLE) $('#btn-open-tracks').addEventListener('click', () => go('tracks'));
 
 /* ---------- 曲目（裏ジャケット） ---------- */
