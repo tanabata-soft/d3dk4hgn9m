@@ -7,6 +7,8 @@ export const ALBUM: {
   catalog: string;
   format: string;
   layout: 'album' | 'single';
+  /** 裏ジャケットに曲目リストが印刷済みなら true（裏面の重ねリストを表示しない） */
+  printedBackList?: boolean;
 } = {
   /** アルバムの題名 */
   title: 'ニコラケイジと木曽と私',
@@ -16,6 +18,7 @@ export const ALBUM: {
   format: 'デジタルCDアルバム',
   /** 形: 'album'（正方形ジャケット＋ブックレット） / 'single'（短冊型ジャケット＋裏面ノート、ブックレットなし） */
   layout: 'album',
+  printedBackList: true,
 };
 
 /** 裏ジャケット下部の表記（例: NK-001 ／ デジタルCDアルバム） */
