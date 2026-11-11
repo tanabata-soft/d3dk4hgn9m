@@ -136,7 +136,7 @@ button { font-family: inherit; cursor: pointer; }
 .lyrics-box { flex: 1; min-height: 0; width: 100%; overflow-y: auto; scroll-behavior: smooth; padding: 8px 12px 8px 4px; mask-image: linear-gradient(180deg, transparent, #000 12%, #000 82%, transparent); }
 .lyrics-bar { position: absolute; top: 6px; bottom: 6px; right: 1px; width: 4px; border-radius: 2px; background: rgba(255,255,255,.14); }
 .lyrics-thumb { position: absolute; left: 0; width: 100%; border-radius: 2px; background: rgba(255,255,255,.55); top: 0; height: 20%; }
-.lyrics-box p { font-size: 16.5px; line-height: 2.15; text-align: center; color: #a7aec4; cursor: default; transition: color .3s; }
+.lyrics-box p { font-size: 16.5px; line-height: 2.15; text-align: center; color: #a7aec4; cursor: pointer; transition: color .3s; }
 .lyrics-box p.cur { color: #fff; font-weight: 700; }
 .lyrics-box p.interlude { color: #565e75; font-size: 14px; }
 .controls { flex: none; width: 100%; padding: 10px 0 4px; }

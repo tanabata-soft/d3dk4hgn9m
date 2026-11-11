@@ -362,9 +362,38 @@ function lyrInteractEnd(): void {
 }
 const lyrBoxEl = $('#lyrics-box');
 document.addEventListener('dblclick', (e) => e.preventDefault(), { passive: false });
-lyrBoxEl.addEventListener('pointerdown', lyrInteractStart);
+/* ---------- 歌詞タップでその行から再生（スクロール操作とは競合させない） ---------- */
+let lyrDownX = 0;
+let lyrDownY = 0;
+let lyrDownScrollTop = 0;
+lyrBoxEl.addEventListener('pointerdown', (e) => {
+  lyrDownX = e.clientX;
+  lyrDownY = e.clientY;
+  lyrDownScrollTop = lyrBoxEl.scrollTop;
+  lyrInteractStart();
+});
 lyrBoxEl.addEventListener('pointerup', lyrInteractEnd);
 lyrBoxEl.addEventListener('pointercancel', lyrInteractEnd);
+lyrBoxEl.addEventListener('click', (e) => {
+  const p = (e.target as HTMLElement).closest('p');
+  if (!p || !lyrBoxEl.contains(p)) return;
+  // 押してからドラッグした（指・カーソルの移動が大きい、または実際にスクロールした）場合は
+  // スクロール操作とみなしてシークしない
+  const moved = Math.max(Math.abs(e.clientX - lyrDownX), Math.abs(e.clientY - lyrDownY));
+  if (moved > 10 || Math.abs(lyrBoxEl.scrollTop - lyrDownScrollTop) > 1) return;
+  const t = Number(p.dataset.t ?? '0');
+  if (!Number.isFinite(t)) return;
+  // シークするタップでは、自由スクロールの保留（3秒で再生位置へ戻る）を解除して選んだ行へ寄せる
+  if (lyrTimer) {
+    clearTimeout(lyrTimer);
+    lyrTimer = null;
+  }
+  lyrHold = false;
+  audio.currentTime = t;
+  audio.play().catch(() => {});
+  syncLyrics();
+  scrollLyricsToCurrent(true);
+});
 lyrBoxEl.addEventListener(
   'wheel',
   () => {

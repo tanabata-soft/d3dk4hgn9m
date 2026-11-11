@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test';
+import { SYNC } from '../src/album/sync';
+import { TRACKS } from '../src/album/tracks';
 
 test('初回に全音源が一括ダウンロードされ、キャッシュに揃う', async ({ page }) => {
   await page.goto('/');
@@ -73,6 +75,55 @@ test('再生中に表紙の再生ボタンを押すと、再生中の曲の画�
   });
   expect(state.paused).toBe(false);
   expect(state.t).toBeGreaterThan(19);
+});
+
+test('歌詞をタップすると、その行の時刻から再生が始まる', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '全曲再生' }).click();
+  await expect(page.locator('#view-player')).toBeVisible();
+  await expect(page.locator('#play-lb')).toHaveText('一時停止', { timeout: 10_000 });
+  // 一時停止してから、1曲目の3行目をタップする: その行から再生が始まり、現在行になる
+  await page.getByRole('button', { name: '再生／一時停止' }).click();
+  await expect(page.locator('#play-lb')).toHaveText('再生');
+  const lines = SYNC[TRACKS[0].src] ?? [];
+  const t = lines[2][0];
+  const line = page.locator(`#lyrics-box p[data-t="${t}"]`);
+  await line.click();
+  await expect(page.locator('body')).toHaveAttribute('data-playing', '1');
+  const now = await page.evaluate(() => document.querySelector('audio')!.currentTime);
+  expect(now).toBeGreaterThanOrEqual(Math.max(0, t - 1));
+  expect(now).toBeLessThan(t + 30);
+  await expect(line).toHaveClass(/cur/);
+});
+
+test('歌詞をドラッグ（スクロール操作）してもシークしない', async ({ page }) => {
+  await page.goto('/');
+  await page.getByRole('button', { name: '全曲再生' }).click();
+  await expect(page.locator('#view-player')).toBeVisible();
+  await expect(page.locator('#play-lb')).toHaveText('一時停止', { timeout: 10_000 });
+  // 一時停止した状態で、先の行（15秒以降）を押してドラッグする: シークも再生再開もしない
+  await page.getByRole('button', { name: '再生／一時停止' }).click();
+  await expect(page.locator('#play-lb')).toHaveText('再生');
+  const t = await page.evaluate(() => {
+    const ps = [...document.querySelectorAll('#lyrics-box p')];
+    const el = ps.find((p) => Number((p as HTMLElement).dataset.t ?? '0') >= 15);
+    return el ? Number((el as HTMLElement).dataset.t) : -1;
+  });
+  expect(t).toBeGreaterThanOrEqual(15);
+  const line = page.locator(`#lyrics-box p[data-t="${t}"]`);
+  await line.scrollIntoViewIfNeeded();
+  const bb = await line.boundingBox();
+  expect(bb).not.toBeNull();
+  if (!bb) return;
+  const cx = bb.x + bb.width / 2;
+  const cy = bb.y + bb.height / 2;
+  await page.mouse.move(cx, cy);
+  await page.mouse.down();
+  await page.mouse.move(cx, cy + 40, { steps: 5 });
+  await page.mouse.up();
+  await expect(page.locator('body')).toHaveAttribute('data-playing', '0');
+  const now = await page.evaluate(() => document.querySelector('audio')!.currentTime);
+  expect(now).toBeLessThan(t - 5);
 });
 
 test('再生と一時停止で表示が切り替わる', async ({ page }) => {
