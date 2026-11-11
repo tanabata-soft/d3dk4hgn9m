@@ -21,6 +21,7 @@
 
 ## 今の状態
 
+- v1.1.15 公開記録: PR #16 を squash マージ（merge commit 83764f77a522bce51f5c537bb499e1b9c47b1310）、ブランチ update/nk-001-v1.1.15 は削除済み。GitHub Pages 再デプロイ成功、https://tanabata-soft.github.io/d3dk4hgn9m/ は HTTP 200、配信中 JS に version 1.1.15 が含まれることを確認済み。CI の check は通過（e2e も通過。ローカル e2e 17件通過済み）。
 - v1.1.15（2026-11-12）: 歌詞タップでその行から再生できるようにした（アルバム・シングル共通ルール、オーナー指示 2026-11-12。テンプレート digitalcd-engine commit 38b215d と同一の実装）。ドラッグによる歌詞スクロールではシークしない（タップ判定は移動量10pxとスクロール量）。e2e にタップシーク／ドラッグではシークしないテストを追加。アルバムに反映するのはこの挙動のみ（裏面フィットはシングル専用、トップへ戻っても止めない挙動はアルバムに元々ある）。
 - デジタルCDアルバムは PWA テンプレート構成(Vite + TypeScript + vite-plugin-pwa)。公開は GitHub Actions → GitHub Pages(リポジトリ `tanabata-soft/d3dk4hgn9m`)、URL は https://tanabata-soft.github.io/d3dk4hgn9m/ 。
 - **エンジンとデータを分離した(v1.1.0)**: 作品データは `src/album/`(album.ts=題名・カタログ・ライナー・奥付、tracks.ts=曲目・解説、sync.ts=歌詞の同期データ(生成物)、media.ts=画像・音源の対応、assets=画像と音源)に集約。エンジン(`src/` のそのほか)は `src/album/` だけを参照する。新しいアルバムはデータ差し替えだけで作れる(手順: `docs/PRODUCTION.md`)。
