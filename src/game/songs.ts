@@ -78,7 +78,10 @@ export const SONG_DEFS: GameSongDef[] = [
     audioUrl: audio04,
     jacketUrl: jacket04,
     accent: '#d6a351',
-    frameInset: 0,
+    // 紙枠あり（2026-11-21 検品で実測）: 紙色（R−B＞22、R 85〜215）の画素割合が
+    // 端から約16px まで ほぼ 1.0 で続き、境界で急に 0 へ落ちる（測り方は
+    // digitalcd-engine docs/PRODUCTION.md「frameInset（紙枠）の測り方」）
+    frameInset: 17,
     album: ALBUM,
     genre: 'Modern Enka',
   },
