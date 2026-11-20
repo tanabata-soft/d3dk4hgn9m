@@ -33,7 +33,7 @@ import { isVibrateOn, setVibrate } from './haptics';
 import { audioContext, audioState, isUnlocked, unlockAudio } from './audio';
 import { load, migrateStorage, requestPersist, save } from './storage';
 
-function initGameMode(): { enter: () => void } {
+function initGameMode(): { enter: () => void; exit: () => void } {
 
   const $ = <T extends HTMLElement>(id: string): T => {
     const el = document.getElementById(id);
@@ -561,6 +561,53 @@ function initGameMode(): { enter: () => void } {
     onLyric: (index) => showLyric(index),
   });
 
+  // ---- Android の端スワイプ「戻る」対策（v1.2.2） ----
+  // 端スワイプの「戻る」は OS が最優先で処理するため、発動自体は止められない。
+  // 代わりに、ゲームモード中は履歴を1つ積んで popstate を捕捉し、「戻る」が
+  // 来てもアプリを閉じさせず・画面遷移もさせずに、この場に留まる。
+  // プレイ中なら、バックグラウンドへ行ったときと同じ中断にする（演奏を止めて
+  // メニューへ戻す。このゲームにポーズ＝続きからの再開は無く、中断の扱いは
+  // visibilitychange の abort に揃えるのが既存の設計）。
+  // 本当にやめる操作（メニュー下部の「戻る」ボタン等で CD 側へ出る）ときは
+  // exit() が積んだ履歴を取り消し、通常の「戻る」に戻す。
+  let historyGuardArmed = false;
+
+  function pushGuardState(): boolean {
+    try {
+      history.pushState({ rhythmGameGuard: true }, '');
+      return true;
+    } catch {
+      // 単体プレビュー（file: やサンドボックス）など、履歴を触れない環境では諦める
+      return false;
+    }
+  }
+
+  const onPopState = (): void => {
+    if (!historyGuardArmed) return;
+    if (!pushGuardState()) {
+      // 積み直せない環境では捕捉をやめる（この popstate 自体は素通りさせる）
+      historyGuardArmed = false;
+      window.removeEventListener('popstate', onPopState);
+    }
+    if (game.isPlaying) game.abort();
+  };
+
+  function armHistoryGuard(): void {
+    if (historyGuardArmed) return;
+    if (!pushGuardState()) return;
+    historyGuardArmed = true;
+    window.addEventListener('popstate', onPopState);
+  }
+
+  function disarmHistoryGuard(): void {
+    if (!historyGuardArmed) return;
+    historyGuardArmed = false;
+    window.removeEventListener('popstate', onPopState);
+    // 積んだ分を1つ取り消して、ゲームへ入る前の履歴状態に戻す。
+    // この back() による popstate は、リスナーを外した後なので素通りする
+    history.back();
+  }
+
   let lastEntry: SongEntry = songById(selectedSong);
   let lastDiff: Difficulty = selectedDiff;
 
@@ -696,13 +743,43 @@ function initGameMode(): { enter: () => void } {
     show('menu');
     renderMenu();
     scrollToSong(selectedSong, false);
+    armHistoryGuard();
+    // 端スワイプの誤発そのものを減らすため、入場時にフルスクリーンを試みる
+    // （1回目の端スワイプがシステム UI の表示で済む端末が多い）。非対応の
+    // 環境や拒否された場合は何もしない（iPhone Safari 等）
+    if (!document.fullscreenElement) {
+      try {
+        const p = document.documentElement.requestFullscreen?.() as Promise<void> | undefined;
+        p?.catch(() => undefined);
+      } catch {
+        /* 非対応環境では無視する */
+      }
+    }
   }
-  return { enter };
+
+  // リズムゲームから出るとき（CD 側の画面へ戻るとき）の後片付け
+  function exit(): void {
+    disarmHistoryGuard();
+    if (document.fullscreenElement) {
+      try {
+        const p = document.exitFullscreen() as Promise<void> | undefined;
+        p?.catch(() => undefined);
+      } catch {
+        /* 解除できない環境では無視する */
+      }
+    }
+  }
+  return { enter, exit };
 }
-let gameMode: { enter: () => void } | null = null;
+let gameMode: { enter: () => void; exit: () => void } | null = null;
 
 /** リズムゲームへ入る（初回は初期化し、毎回メニュー画面から始める） */
 export function enterGameMode(): void {
   gameMode ??= initGameMode();
   gameMode.enter();
+}
+
+/** リズムゲームから出る（履歴ガードの掃除とフルスクリーンの解除） */
+export function exitGameMode(): void {
+  gameMode?.exit();
 }
