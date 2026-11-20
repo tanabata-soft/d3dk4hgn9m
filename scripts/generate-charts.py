@@ -94,6 +94,8 @@ HOP = 512
 #   chorus_bonus: サビの chorus_layer へのボーナス（既定 0.30）
 #   burst_basis: 16分パターンのゲートの根拠（main / drums / main65）
 #   chord_gate_drop: 同時押しの強さゲートだけを下げる曲別調整（強弱が均一な曲用。既定 0）
+#   lane_balance_w: レーン分布を均す圧力（fit_cost の累積カウント項）の曲別調整（既定 2.0）。
+#     hard は間引きで分布を守れないため、静かな曲でレーン割合が検証範囲を割るときに上げる
 SONGS = {
     # 雛形の仮データ（テンプレートシングルの2曲。新作では収録曲に書き換える）。
     # 音源は src/game/assets/track0N.mp3（CD 側の MP4 から音声だけを MP3
@@ -184,6 +186,8 @@ SONGS = {
         "chart_v5": True,
         "chorus_layer": "vocal",
         "chorus_bonus": 0.5,
+        # 最も静かな曲で hard のレーン3が 0.173 と下限を割ったため、分布を均す圧力を上げる
+        "lane_balance_w": 5.0,
     },
     "actor": {
         "title": "The Actor in the Mist",
@@ -663,9 +667,10 @@ def plan_phrase(rng, phrase, unit_energy, unit_gate, unit_fever, is_chorus):
 class Realizer:
     """計画どおりにノーツを置きながら、レーンの流れと分布を保つ。"""
 
-    def __init__(self, slot_map, floor_pat, use_eff=False):
+    def __init__(self, slot_map, floor_pat, use_eff=False, balance_w=2.0):
         self.slot_map = slot_map
         self.floor_pat = floor_pat
+        self.balance_w = balance_w
         # v5: フロア判定に主レイヤーの strength（slot["eff"]）を使う（V5-2）
         self.use_eff = use_eff
         self.notes = []
@@ -787,7 +792,7 @@ class Realizer:
             delta = abs(lanes[0] - self.prev_lanes[-1])
             cost += {0: 0.35, 1: 0.0, 2: 0.5, 3: 1.1}[delta]
         for i, lane in enumerate(lanes):
-            cost += 2.0 * (self.counts[lane] / max(1, self.total))
+            cost += self.balance_w * (self.counts[lane] / max(1, self.total))
             if i == 0:
                 # 単位の頭は easy にも残るので、その分布も均す
                 cost += 1.6 * (self.head_counts[lane] / max(1, sum(self.head_counts)))
@@ -853,7 +858,7 @@ class Realizer:
         grid = slot["beat"] * 4 + slot["sub"]
         for lane in range(4):
             cost = (
-                2.0 * (self.counts[lane] / max(1, self.total))
+                self.balance_w * (self.counts[lane] / max(1, self.total))
                 + 1.6 * (self.head_counts[lane] / max(1, sum(self.head_counts)))
                 + 0.06 * abs(lane - slot["pitch_lane"])
                 + self.side_penalty([lane], [grid])
@@ -1217,7 +1222,7 @@ def process_song(song_id, meta, y, sr):
     # 計画 → 実体化（サビはモチーフを再登場させる）
     # 乱数の種は曲 ID から決める（同じ曲は再生成しても同じ譜面になる。曲ごとに変える）
     rng = random.Random(SEED + sum((i + 1) * ord(c) for i, c in enumerate(song_id)))
-    realizer = Realizer(slot_map, thr[12], use_eff=v5)
+    realizer = Realizer(slot_map, thr[12], use_eff=v5, balance_w=float(meta.get("lane_balance_w", 2.0)))
     motif_plan = None
     chorus_count = 0
     chorus_first_bars = set()

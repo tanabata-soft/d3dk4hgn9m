@@ -78,22 +78,24 @@ describe('リズムゲームの曲データ', () => {
     const sync = JSON.parse(
       syncText.slice(objStart, syncText.lastIndexOf('}') + 1).replace(/,\s*([}\]])/g, '$1'),
     ) as Record<string, [number, string][]>;
-    const idByTitle: Record<string, string> = {
+    // sync.ts のキーは表示タイトルではなく tracks.ts の src（英語曲は src と
+    // タイトルが異なる: Kiso_ji_Samurai_Flow ↔ Kiso-ji: Samurai Flow）
+    const idBySrc: Record<string, string> = {
       '凍える銀の幕': 'kogoe',
-      'Kiso-ji: Samurai Flow': 'samurai',
+      'Kiso_ji_Samurai_Flow': 'samurai',
       '銀幕の木曽路': 'ginmaku',
       'ニコラスケイジと木曽と私': 'nicolas',
       '木曽路のニコラス': 'yoru',
-      'Kiso Night Silhouette': 'silhouette',
+      'Kiso_Night_Silhouette': 'silhouette',
       '木曽路、狂乱の舞台': 'kyoran',
-      'Nakasendo Fire': 'fire',
+      'Nakasendo_Fire': 'fire',
       '石畳のハイウェイ': 'highway',
       '木曽の霧と狂気の瞳': 'kiri',
-      'The Actor in the Mist': 'actor',
+      'The_Actor_in_the_Mist': 'actor',
     };
-    for (const [title, lines] of Object.entries(sync)) {
-      const entry = SONGS.find((s) => s.id === idByTitle[title]);
-      expect(entry, title).toBeDefined();
+    for (const [src, lines] of Object.entries(sync)) {
+      const entry = SONGS.find((s) => s.id === idBySrc[src]);
+      expect(entry, src).toBeDefined();
       expect(entry?.lyrics.map((l) => [l.startMs, l.text])).toEqual(
         lines.map(([sec, text]) => [Math.round(sec * 1000), text]),
       );

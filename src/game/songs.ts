@@ -53,7 +53,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#5199d6',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Cinematic Ballad',
+    genre: 'Avant-Garde Theatrical Rock',
   },
   {
     id: 'samurai',
@@ -62,7 +62,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#518cd6',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Hip Hop / Trap',
+    genre: 'Golden Era Boom Bap',
   },
   {
     id: 'ginmaku',
@@ -71,7 +71,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#51c8d6',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Folk Ballad',
+    genre: 'Showa Kayokyoku',
   },
   {
     id: 'nicolas',
@@ -80,7 +80,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#d6a351',
     frameInset: 0,
     album: ALBUM,
-    genre: 'City Pop',
+    genre: 'Modern Enka',
   },
   {
     id: 'yoru',
@@ -89,7 +89,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#d65171',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Enka / Kayōkyoku',
+    genre: 'Enka',
   },
   {
     id: 'silhouette',
@@ -98,7 +98,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#5190d6',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Synthwave',
+    genre: '90s J-Pop / Eurobeat',
   },
   {
     id: 'kyoran',
@@ -107,7 +107,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#d66051',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Theatrical Rock',
+    genre: 'Avant-garde Cabaret Rock',
   },
   {
     id: 'fire',
@@ -116,7 +116,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#d66d51',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Festival EDM',
+    genre: 'Cinematic Hip-Hop',
   },
   {
     id: 'highway',
@@ -125,7 +125,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#b651d6',
     frameInset: 0,
     album: ALBUM,
-    genre: 'AOR / City Pop',
+    genre: '90s J-Pop / Eurobeat',
   },
   {
     id: 'kiri',
@@ -134,7 +134,7 @@ export const SONG_DEFS: GameSongDef[] = [
     accent: '#60d651',
     frameInset: 0,
     album: ALBUM,
-    genre: 'Dark Ambient Ballad',
+    genre: '―',
   },
   {
     id: 'actor',
@@ -144,6 +144,6 @@ export const SONG_DEFS: GameSongDef[] = [
     frameInset: 0,
     bonus: true,
     album: ALBUM,
-    genre: 'Cinematic Pop',
+    genre: '80s Showa-era Kayokyoku',
   },
 ];
