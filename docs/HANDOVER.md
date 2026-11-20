@@ -2,7 +2,46 @@
 
 作業の区切りごとに書き直す(次の作業を始める人や AI が、ここだけ読めば再開できるように)。古くなった内容は消し、今の状態だけを残す。
 
-更新: 2026-11-13・版 v1.1.15（歌詞タップシークの反映）
+更新: 2026-11-21・版 v1.2.0（リズムゲーム適用完了、公開手続き中）
+
+## v1.2.0 リズムゲーム適用（2026-11-20 開始、2026-11-21 完了）
+
+オーナー指示で NK-001 本体へリズムゲームを統合した（単体の『キソ・ケイジ・ビート』とは別物）。作業は 2026-11-20 に別 AI が下準備をして引き継ぎ、2026-11-21 に譜面生成から再開して完了した。状態はこの節が正。公開後に残るのはオーナーの実機確認（ゲームの叩き心地）のみ。
+
+### 済んでいること
+
+- デジタルCDエンジン v1.4.1（mmishina-art/digitalcd-engine）の任意モジュール「リズムゲーム」を移植済み。コピー物: `src/game/` 一式（data/ を除く）、`src/debug.ts`（registerDebugActions 追加版へ差し替え）、`scripts/`（generate-charts.py / gen-game-lyrics.mjs / check-two-thumb.py / verify-autoplay-full.mjs / jacket-accent.py）、`tests/game-data.test.ts`、`e2e/game.spec.ts`
+- 配線済み: index.html に「遊ぶ」ボタン（btn-open-game）と `#view-game` セクション、src/main.ts に enterGameMode の import とクリック処理、vite.config.ts の precache に mp3・wav を追加
+- 素材済み: CD の MP4 11曲から MP3 192kbps を抽出して `src/game/assets/track01〜11.mp3`、曲ジャケットを `track01〜11.jpg` にコピー、hit-sample.wav も配置
+- `src/game/songs.ts` 作成済み。全11曲、ID は kogoe / samurai / ginmaku / nicolas / yoru / silhouette / kyoran / fire / highway / kiri / actor（actor は bonus: true で CD 側 tracks.ts と一致）。album 表示は「NK-001 ニコラスケイジと木曽と私」、genre は CD 側の表記どおり（引き継ぎ時点では実際には全曲 CD と異なる表記だったため、2026-11-21 に CD 表記へ修正した。NK-S007 の先行例でも game 側 genre は CD と一致。kiri は CD 側が「―」のため game 側も「―」）
+- テーマ色はパターン3（曲ごとに切替、オーナー決定 2026-11-20 で確定）。accent は scripts/jacket-accent.py の抽出値: kogoe #5199d6 / samurai #518cd6 / ginmaku #51c8d6 / nicolas #d6a351 / yoru #d65171 / silhouette #5190d6 / kyoran #d66051 / fire #d66d51 / highway #b651d6 / kiri #60d651 / actor #d67351
+- frameInset は全曲 0。11枚とも紙枠は無く全面絵（track02 の地色クリーム、track06 の夜景、track10 の黒地＋虹色の星は絵の一部であることを目視確認済み。端の低分散だけで判断しないこと）
+- `scripts/generate-charts.py` の SONGS 表を本作11曲に差し替え済み。FEVER 区間は歌詞（src/album/sync.ts）のサビ反復ブロックから決定（ブロック先頭行の開始秒〜末尾行の歌唱終了頃）。chorus_layer は "vocal"、chorus_bonus は 0.5（NK-S003 のオーナー指示のパターン）
+- `scripts/gen-game-lyrics.mjs` の対応表、`tests/game-data.test.ts`（11曲の ID・タイトル・対応表）、`e2e/game.spec.ts`（スライド11枚・kogoe / samurai・ベストスコア表示文）を本作向けに適合済み。ただし対応表は 2026-11-21 に要修正だった: sync.ts のキーは表示タイトルではなく tracks.ts の src（英語曲は src ≠ タイトル。例 Kiso_ji_Samurai_Flow）で、タイトル引きの表では歌詞生成が落ちた。両ファイルを src キー（ID_BY_SRC）に直して解決済み
+- バージョンは 1.1.15 → 1.2.0 に bump 済み（package.json と package-lock.json のルート version 2箇所）。注意: package-lock.json には旧来から name が "pwa-app" のまま等のドリフトがある（今回の変更ではない）
+
+### 譜面生成（2026-11-21 完了）
+
+- kiri のブロッカーは解消した。原因: hard は間引き（thin）でレーン分布を守る仕組みが無く、実体化時のバランス圧（fit_cost の累積カウント項、既定 2.0）だけでは、最も静かな kiri でレーン3が 72/416＝0.173 と下限 0.18 を3ノーツ分だけ割った
+- 対策: 生成器に曲別調整 `lane_balance_w`（既定 2.0、Realizer の balance_w）を新設し、kiri のエントリだけ 5.0 にした。kiri/hard は [111, 114, 108, 80]＝[0.269, 0.276, 0.262, 0.194] で全レーン範囲内。既定値の曲は従来どおりで、kogoe の再生成結果が引き継ぎ時の記録（196/389/778）と完全一致することを確認済み
+- 全11曲の生成が完了し `src/game/data/charts.json`（170,287 バイト）を書き出した。両親指チェック違反 0（生成時＋単独実行の両方で確認）。BPM とノーツ数（easy/normal/hard）: kogoe 125・196/389/778、samurai 90・147/287/494、ginmaku 120・179/393/671、nicolas 152・190/377/800、yoru 152・181/362/809、silhouette 150・191/388/810、kyoran 125・192/397/790、fire 120・127/401/786、highway 135・198/388/697、kiri 96・105/203/413、actor 124・163/371/658
+- 歌詞も生成済み（`src/game/data/lyrics.json`、全11曲 21〜55行、sync.ts の検証済み時刻から変換）
+- 生成の実行環境: librosa 入りの venv が必要。この VM では `~/workspace/nk001-rhythm/.venv`（repo の外。repo 内に置くと eslint が .venv 内の JS を拾って verify の lint が落ちるので注意）。再実行は `<venv>/bin/python scripts/generate-charts.py`（1曲あたり約25〜60秒だった）
+
+### 検証結果（2026-11-21）
+
+- `npm run verify` 通過（lint／単体テスト 7ファイル36件／build（precache 41 entries）／check:dist／check:content エラー0）
+- e2e 25件全て通過（4173番ポートは空きを確認してから実行）
+- 完走確認はオーナー決定（2026-11-20）により代替方式で実施: 全11曲×3難易度の譜面健全性（レーン割合・時刻順・尺超過・ロングノーツ終端）を一括検査して全て正常＋オートプレイ完走3曲（kogoe hard 778/778、kiri hard 413/413、actor hard 658/658、いずれも PERFECT のみ・MISS 0 のフルコンボ）
+- 単体プレビュー（dist-preview/preview.html、97,635 KB）を作成し、埋め込み MP3 11曲の長さが原音源と完全一致（差 0.000 秒）、hit-sample.wav 1件の埋め込みも確認済み。オーナー確認用に ~/workspace/your_files/NK-001-preview.html へコピー済み
+
+### 残件
+
+- オーナーの実機確認（リズムゲームの叩き心地と表示）。問題があれば v1.2.1 で対応する
+
+### 曲データ（ID / タイトル / 尺・MP3実測）
+
+- kogoe「凍える銀の幕」178.24秒 / samurai「Kiso-ji: Samurai Flow」162.56秒 / ginmaku「銀幕の木曽路」180.14秒 / nicolas「ニコラスケイジと木曽と私」178.58秒 / yoru「木曽路のニコラス」172.80秒 / silhouette「Kiso Night Silhouette」179.88秒 / kyoran「木曽路、狂乱の舞台」176.77秒 / fire「Nakasendo Fire」177.98秒 / highway「石畳のハイウェイ」179.58秒 / kiri「木曽の霧と狂気の瞳」152.00秒 / actor「The Actor in the Mist」180.51秒
 
 ## 【デジタルCD台帳反映用レポート】
 
@@ -10,13 +49,13 @@
 - タイトル：ニコラスケイジと木曽と私
 - 形態：アルバム
 - 制作担当：シリーズ制作チャット
-- 状態：完了
-- 現行バージョン：1.1.15
+- 状態：制作中
+- 現行バージョン：1.2.0
 - リポジトリ：tanabata-soft/d3dk4hgn9m
 - 公開URL：https://tanabata-soft.github.io/d3dk4hgn9m/
 - 収録曲数：11（本編10曲・ボーナストラック1曲）
 - 総再生時間：約32分
-- 残件・仮置き：なし
+- 残件・仮置き：公開手続き中（PR→マージ→Pages確認の完了後に記録を更新する）。公開後はリズムゲームの実機確認（オーナー）のみ
 - HANDOVER.md更新：済
 
 ## 今の状態
