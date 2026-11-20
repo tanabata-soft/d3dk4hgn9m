@@ -2,7 +2,46 @@
 
 作業の区切りごとに書き直す(次の作業を始める人や AI が、ここだけ読めば再開できるように)。古くなった内容は消し、今の状態だけを残す。
 
-更新: 2026-11-13・版 v1.1.15（歌詞タップシークの反映）
+更新: 2026-11-20・版 v1.2.0 作業中（リズムゲーム適用、引き継ぎのため中断・固定）
+
+## v1.2.0 リズムゲーム適用（2026-11-20、作業中断・引き継ぎ用）
+
+オーナー指示でリズムゲーム化を開始し、同日中に別 AI へ引き継ぐため中断した。状態はこの節とブランチ `feat/rhythm-game` のコミットが正。公開はまだ（main は v1.1.15 のまま）。
+
+### 済んでいること
+
+- デジタルCDエンジン v1.4.1（mmishina-art/digitalcd-engine）の任意モジュール「リズムゲーム」を移植済み。コピー物: `src/game/` 一式（data/ を除く）、`src/debug.ts`（registerDebugActions 追加版へ差し替え）、`scripts/`（generate-charts.py / gen-game-lyrics.mjs / check-two-thumb.py / verify-autoplay-full.mjs / jacket-accent.py）、`tests/game-data.test.ts`、`e2e/game.spec.ts`
+- 配線済み: index.html に「遊ぶ」ボタン（btn-open-game）と `#view-game` セクション、src/main.ts に enterGameMode の import とクリック処理、vite.config.ts の precache に mp3・wav を追加
+- 素材済み: CD の MP4 11曲から MP3 192kbps を抽出して `src/game/assets/track01〜11.mp3`、曲ジャケットを `track01〜11.jpg` にコピー、hit-sample.wav も配置
+- `src/game/songs.ts` 作成済み。全11曲、ID は kogoe / samurai / ginmaku / nicolas / yoru / silhouette / kyoran / fire / highway / kiri / actor（actor は bonus: true で CD 側 tracks.ts と一致）。album 表示は「NK-001 ニコラスケイジと木曽と私」、genre は CD 側の表記どおり
+- テーマ色はパターン3（曲ごとに切替、オーナー決定 2026-11-20 で確定）。accent は scripts/jacket-accent.py の抽出値: kogoe #5199d6 / samurai #518cd6 / ginmaku #51c8d6 / nicolas #d6a351 / yoru #d65171 / silhouette #5190d6 / kyoran #d66051 / fire #d66d51 / highway #b651d6 / kiri #60d651 / actor #d67351
+- frameInset は全曲 0。11枚とも紙枠は無く全面絵（track02 の地色クリーム、track06 の夜景、track10 の黒地＋虹色の星は絵の一部であることを目視確認済み。端の低分散だけで判断しないこと）
+- `scripts/generate-charts.py` の SONGS 表を本作11曲に差し替え済み。FEVER 区間は歌詞（src/album/sync.ts）のサビ反復ブロックから決定（ブロック先頭行の開始秒〜末尾行の歌唱終了頃）。chorus_layer は "vocal"、chorus_bonus は 0.5（NK-S003 のオーナー指示のパターン）
+- `scripts/gen-game-lyrics.mjs` の ID_BY_TITLE、`tests/game-data.test.ts`（11曲の ID・タイトル・対応表）、`e2e/game.spec.ts`（スライド11枚・kogoe / samurai・ベストスコア表示文）を本作向けに適合済み
+- バージョンは 1.1.15 → 1.2.0 に bump 済み（package.json と package-lock.json のルート version 2箇所）。注意: package-lock.json には旧来から name が "pwa-app" のまま等のドリフトがある（今回の変更ではない）
+
+### 譜面生成の状態（2026-11-20 23:45 時点の確定事実）
+
+- 生成は10曲目 kiri で検証アサーションにより異常終了した。charts.json は最後に一括で書く方式のため**未生成**（src/game/data/ は空）。ログは /tmp/nk001-charts.log（VM 再起動で消えることがある）
+- 失敗内容: `AssertionError: kiri/hard: レーン3の割合 0.17 が範囲外`（LANE_MIN_SHARE 0.18 未満）。kiri は本作で最も静かな曲（Dark Ambient Ballad、152秒）で、hard のレーン分布が偏った。引き継ぎ側の対応案: kiri のエントリに layer_bias や chord_gate_drop 等の曲別調整を入れて再生成する、または生成器のレーン配分を見直す。actor は未着手
+- 1〜9曲目は生成・検証まで完了していた（再生成すれば同じ結果になるはず）。BPM とノーツ数（easy/normal/hard）: kogoe 125・196/389/778、samurai 90・147/287/494、ginmaku 120・179/393/671、nicolas 152・190/377/800、yoru 152・181/362/809、silhouette 150・191/388/810、kyoran 125・192/397/790、fire 120・127/401/786、highway 135・198/388/697
+- 再実行コマンド: `~/workspace/kiso-rhythm-game/.venv/bin/python scripts/generate-charts.py`（この VM では1曲あたり数分、混雑時はさらにかかる）。生成が終わるまで charts.json は出ない
+
+### 残作業（この順で）
+
+1. `node scripts/gen-game-lyrics.mjs`（charts.json の後に実行。歌詞の endMs を譜面の実尺で締める）
+2. `python3 scripts/check-two-thumb.py src/game/data/charts.json`（パス引数が必須。違反 0 が合格）
+3. `npm run verify`（lint＋単体テスト＋build＋check:dist＋check:content）。layer-rules テストは VM 高負荷時に 5 秒タイムアウトのフレークが出ることがある。その場合は単独で再実行して通ればよい
+4. e2e: 実行前に 4173 番ポートを掴んでいるプロセスを確認すること（他ワークツリーの preview が掴んでいると旧ビルドで走る）。掴まれていたら playwright.local.config.ts（4174 番・reuseExistingServer: false）を一時的に作って回し、コミット前に消す。e2e の出力を tail にパイプすると終了コードが隠れるので、ファイルにリダイレクトして確認する
+5. 完走確認: `scripts/verify-autoplay-full.mjs` はこの VM のヘッドレス再生が実時間の 0.45〜0.67 倍しか進まずタイムアウトしやすい（作品の不具合ではない）。確実なのは1曲ずつプローブで回す方式（NK-S006 v1.2.0 の前例）。全11曲フルコンボが理想だが、所要が大きい場合は「複数曲の完走＋全曲の譜面健全性」で代替できるかオーナー未決（2026-11-20 時点）
+6. 単体プレビュー: 先に `rm -rf node_modules/.cache dist-preview` してから `npm run build:preview`（キャッシュが残ると前作の音源が埋め込まれる事故の前例あり）。完成後は埋め込み MP3 を取り出して長さを実測し、原音源と一致を確認してから渡す
+7. この HANDOVER の台帳ブロック（現行バージョン等）を v1.2.0 に更新する
+8. コミット → push → PR → CI（check / e2e）通過 → squash マージ → GitHub Pages 配信確認（配信中 index の JS バンドル名がローカル build と一致し、"1.2.0" を含むこと）
+9. 台帳チャット（★デジタルCDシリーズ）へ公開報告を1件送る
+
+### 曲データ（ID / タイトル / 尺・MP3実測）
+
+- kogoe「凍える銀の幕」178.24秒 / samurai「Kiso-ji: Samurai Flow」162.56秒 / ginmaku「銀幕の木曽路」180.14秒 / nicolas「ニコラスケイジと木曽と私」178.58秒 / yoru「木曽路のニコラス」172.80秒 / silhouette「Kiso Night Silhouette」179.88秒 / kyoran「木曽路、狂乱の舞台」176.77秒 / fire「Nakasendo Fire」177.98秒 / highway「石畳のハイウェイ」179.58秒 / kiri「木曽の霧と狂気の瞳」152.00秒 / actor「The Actor in the Mist」180.51秒
 
 ## 【デジタルCD台帳反映用レポート】
 

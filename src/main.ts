@@ -16,6 +16,7 @@ import { exposeTestApi, setData, setupDebug } from './debug';
 import { setupInstallGuide } from './install';
 import { setupUpdateBanner } from './pwa';
 import { downloadAllAudio } from './download';
+import { enterGameMode } from './game/game-main';
 
 const $ = <T extends HTMLElement>(s: string): T => {
   const el = document.querySelector(s);
@@ -108,6 +109,12 @@ if (!SINGLE)
     renderPage(0);
     go('booklet');
   });
+$('#btn-open-game').addEventListener('click', () => {
+  // リズムゲームに入る時は、CD 側の再生を止める（2つの音が重ならないように）
+  audio.pause();
+  enterGameMode();
+  go('game');
+});
 $('#btn-play-all').addEventListener('click', () => {
   // すでに再生中（または一時停止中）のときは、最初から再生し直さず再生画面へ戻るだけにする（オーナー指示 2026-11-05）
   if (cur >= 0 && !audio.ended) {
