@@ -16,7 +16,7 @@ import { exposeTestApi, setData, setupDebug } from './debug';
 import { setupInstallGuide } from './install';
 import { setupUpdateBanner } from './pwa';
 import { downloadAllAudio } from './download';
-import { enterGameMode } from './game/game-main';
+import { enterGameMode, exitGameMode } from './game/game-main';
 
 const $ = <T extends HTMLElement>(s: string): T => {
   const el = document.querySelector(s);
@@ -91,6 +91,9 @@ let currentView = 'cover';
 
 /* ---------- 画面遷移 ---------- */
 function go(name: string): void {
+  // リズムゲームから出るときは、ゲーム側の後片付け（端スワイプ対策の履歴
+  // ガードの掃除とフルスクリーンの解除）を先にする
+  if (currentView === 'game' && name !== 'game') exitGameMode();
   // シングル形態では、トップへ戻ったら曲を止める（オーナー指示 2026-11-04）
   if (SINGLE && name === 'cover' && !audio.paused) audio.pause();
   currentView = name;

@@ -161,3 +161,31 @@ test('リズムゲーム画面からトップへ戻れる（設定の横の「�
   await page.locator('#btn-open-game').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
 });
+
+test('プレイ中の「戻る」（端スワイプ）では閉じずにメニューへ戻り、退出後は履歴が掃除される', async ({ page }) => {
+  await page.locator('#btn-open-game').click();
+  await expect(page.locator('#menu-screen')).toBeVisible();
+  // ゲームモード中は、端スワイプ対策の履歴ガードが積まれている
+  await expect
+    .poll(() => page.evaluate(() => (history.state as { rhythmGameGuard?: boolean } | null)?.rhythmGameGuard))
+    .toBe(true);
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  // ブラウザの「戻る」＝ Android の端スワイプ「戻る」
+  await page.goBack();
+  // アプリは閉じず、ゲーム画面に留まって、演奏は中断されメニューに戻る
+  await expect(page.locator('body')).toHaveAttribute('data-view', 'game');
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
+  await expect(page.locator('#menu-screen')).toBeVisible();
+  // ガードは積み直されているので、もう一度「戻る」を押しても閉じない
+  await expect
+    .poll(() => page.evaluate(() => (history.state as { rhythmGameGuard?: boolean } | null)?.rhythmGameGuard))
+    .toBe(true);
+  await page.goBack();
+  await expect(page.locator('body')).toHaveAttribute('data-view', 'game');
+  await expect(page.locator('#menu-screen')).toBeVisible();
+  // 本当にやめる（メニュー下部の「戻る」ボタン）とトップへ戻り、履歴ガードは掃除される
+  await page.locator('.game-back').click();
+  await expect(page.locator('body')).toHaveAttribute('data-view', 'cover');
+  await expect.poll(() => page.evaluate(() => history.state)).toBeNull();
+});

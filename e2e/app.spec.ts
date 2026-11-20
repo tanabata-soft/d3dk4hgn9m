@@ -184,6 +184,16 @@ test('ブックレットの末尾からインストール方法を開ける（�
   await expect(dialog).toBeHidden();
 });
 
+test('トップ画面からもインストール方法を開ける', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#install-open-cover').click();
+  const dialog = page.locator('#install-dialog');
+  await expect(dialog).toBeVisible();
+  await expect(dialog.locator('details[data-platform="android"]')).toHaveJSProperty('open', true);
+  await dialog.getByRole('button', { name: 'とじる' }).click();
+  await expect(dialog).toBeHidden();
+});
+
 test('ブックレットの末尾にバージョンが表示される', async ({ page }) => {
   await page.goto('/');
   await expect(page.locator('#version')).toHaveText(/^\d+\.\d+\.\d+$/);
