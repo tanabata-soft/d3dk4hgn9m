@@ -28,6 +28,7 @@ import {
   setDebug,
   type DebugAction,
 } from '../debug';
+import { detectPlatform } from '../install';
 import { isSoundOn, playSwipeSound, playUiClick, preloadHitSample, setSound } from './sound';
 import { isVibrateOn, setVibrate } from './haptics';
 import { audioContext, audioState, isUnlocked, unlockAudio } from './audio';
@@ -666,6 +667,16 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     selectedDiff = lastDiff;
     void startGame();
   });
+  $('next-button').addEventListener('click', () => {
+    // 曲順（SONGS の並び＝トラック順）で次の曲へ。最後の曲の次は先頭に戻る
+    // （オーナー指示 2026-11-21）。難易度はいまの演奏のまま変えない
+    const next = SONGS[(slideIndex(lastEntry.id) + 1) % SONGS.length];
+    selectedSong = next.id;
+    selectedDiff = lastDiff;
+    save('song', selectedSong);
+    renderMenu();
+    void startGame();
+  });
   $('back-button').addEventListener('click', () => {
     show('menu');
     renderMenu();
@@ -745,9 +756,14 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     scrollToSong(selectedSong, false);
     armHistoryGuard();
     // 端スワイプの誤発そのものを減らすため、入場時にフルスクリーンを試みる
-    // （1回目の端スワイプがシステム UI の表示で済む端末が多い）。非対応の
-    // 環境や拒否された場合は何もしない（iPhone Safari 等）
-    if (!document.fullscreenElement) {
+    // （1回目の端スワイプがシステム UI の表示で済む端末が多い）。ただし対象は
+    // Android のみ（オーナー決定 2026-11-21）: フルスクリーンは端スワイプ対策
+    // なので、ジェスチャーナビゲーションの無い PC 等では、入場時にウィンドウを
+    // 勝手に全画面にしない。非対応の環境や拒否された場合は何もしない
+    if (
+      !document.fullscreenElement &&
+      detectPlatform(navigator.userAgent, navigator.platform, navigator.maxTouchPoints) === 'android'
+    ) {
       try {
         const p = document.documentElement.requestFullscreen?.() as Promise<void> | undefined;
         p?.catch(() => undefined);
