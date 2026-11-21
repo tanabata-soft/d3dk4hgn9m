@@ -79,9 +79,11 @@ export const SONG_DEFS: GameSongDef[] = [
     jacketUrl: jacket04,
     accent: '#d6a351',
     // 紙枠あり（2026-11-21 検品で実測）: 紙色（R−B＞22、R 85〜215）の画素割合が
-    // 端から約16px まで ほぼ 1.0 で続き、境界で急に 0 へ落ちる（測り方は
-    // digitalcd-engine docs/PRODUCTION.md「frameInset（紙枠）の測り方」）
-    frameInset: 17,
+    // 左・上で約16px まで ほぼ 1.0 で続き、境界で急に 0 へ落ちる（測り方は
+    // digitalcd-engine docs/PRODUCTION.md「frameInset（紙枠）の測り方」）。
+    // 当初は左・上の実測で 17 としたが、全曲再実測（v1.2.4）で右辺は割合 1.0 が
+    // 20px まで続き 23px 付近まで紙が残ると分かったため、四辺の最大に合わせて 24。
+    frameInset: 24,
     album: ALBUM,
     genre: 'Modern Enka',
   },
@@ -99,7 +101,12 @@ export const SONG_DEFS: GameSongDef[] = [
     audioUrl: audio06,
     jacketUrl: jacket06,
     accent: '#5190d6',
-    frameInset: 0,
+    // 白枠あり（2026-11-21 オーナー指摘で実測）: ポスター風の白い縁取りが
+    // 焼き込まれている。紙色テスト（暖色）では検出できず、白〜無彩色の明るい画素
+    // （min(R,G,B)＞190、色のばらつき＜36）の割合で測ると、右辺は 29px まで 1.0
+    // で 30px で 0 へ落ちる（上 14px、下 4px＋擦れ、左 3px と非対称）。
+    // frameInset は四辺一律なので、最大の右辺に合わせて 31（境界＋1）。
+    frameInset: 31,
     album: ALBUM,
     genre: '90s J-Pop / Eurobeat',
   },
