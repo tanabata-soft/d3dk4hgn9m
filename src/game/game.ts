@@ -32,6 +32,7 @@ import {
   type Judge,
   type JudgementCounts,
   type PlayNote,
+  type Rank,
 } from './logic';
 import type { SongEntry } from './charts';
 import { COMBO_PATTERNS, COMBO_SHOW_CONFIG, comboPatternDef } from './presentation';
@@ -47,7 +48,7 @@ export interface GameResult {
   counts: JudgementCounts;
   maxCombo: number;
   accuracy: number;
-  rank: string;
+  rank: Rank;
   /** オートプレイで演奏したか（true の回はベストスコアに残さない） */
   autoplay: boolean;
 }
@@ -469,6 +470,9 @@ export class Game {
     // 2026-11-21: リズムゲーム開始直後に前の曲の背景が一瞬残る）
     this.bg = null;
     this.clearCanvases();
+    // 歌詞表示（DOM）も前の曲のものが残るため、読み込み前に「歌詞なし」を通知して
+    // 消しておく（オーナー指摘 2026-11-21: 背景は消えたが歌詞が残っていた）
+    this.cb.onLyric(-1);
     const buf = await loadBuffer(entry.audioUrl);
     if (this.destroyed || session !== this.startSession) return;
     this.songBuf = buf;

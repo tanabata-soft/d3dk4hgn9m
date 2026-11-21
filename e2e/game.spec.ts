@@ -168,6 +168,59 @@ test('次の曲の読み込み中に、前の曲の画面（背景）が残ら�
   await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
 });
 
+test('演奏が終わるとジングルが鳴ってから結果が出る', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  await page.evaluate(() => {
+    const w = window as unknown as { __jingleRank: string };
+    w.__jingleRank = '';
+    document.addEventListener('app:sound', (e) => {
+      const d = (e as CustomEvent).detail as { kind?: string; rank?: string };
+      if (d?.kind === 'jingle') w.__jingleRank = d.rank ?? '?';
+    });
+  });
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await page.evaluate(() => {
+    const api = (window as unknown as { __pwaTest?: { finishNow?: () => void } }).__pwaTest;
+    api?.finishNow?.();
+  });
+  // ジングルが鳴っている間は、結果はまだ出ない（何も叩いていないのでランクは C）
+  await page.waitForTimeout(350);
+  await expect(page.locator('#result-screen')).toBeHidden();
+  await expect
+    .poll(() => page.evaluate(() => (window as unknown as { __jingleRank: string }).__jingleRank))
+    .toBe('C');
+  // ジングルが終わると結果が出る
+  await expect(page.locator('#result-screen')).toBeVisible({ timeout: 5_000 });
+});
+
+test('次の曲の読み込み中に、前の曲の歌詞が残らない', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  // 歌詞が出るまで待つ（1行目は約8.7秒から）
+  await expect(page.locator('#lyric-current')).not.toHaveText('', { timeout: 25_000 });
+  await page.evaluate(() => {
+    const api = (window as unknown as { __pwaTest?: { finishNow?: () => void } }).__pwaTest;
+    api?.finishNow?.();
+  });
+  await expect(page.locator('#result-screen')).toBeVisible({ timeout: 10_000 });
+  // 次の曲の読み込みを遅らせて、読み込み中の歌詞表示を確かめる
+  await page.route('**/*.mp3', async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  await page.locator('#next-button').click();
+  await page.waitForTimeout(400);
+  await expect(page.locator('#lyric-prev')).toHaveText('');
+  await expect(page.locator('#lyric-current')).toHaveText('');
+  await expect(page.locator('#lyric-next')).toHaveText('');
+});
+
 test('曲を変えるとメニューの背景ジャケットも即座に切り替わる', async ({ page }) => {
   await page.locator('#btn-open-game').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
