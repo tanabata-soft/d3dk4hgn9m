@@ -189,3 +189,26 @@ test('プレイ中の「戻る」（端スワイプ）では閉じずにメニ�
   await expect(page.locator('body')).toHaveAttribute('data-view', 'cover');
   await expect.poll(() => page.evaluate(() => history.state)).toBeNull();
 });
+
+test('広い画面ではプレイ画面がスマホ比率のステージになる（案B）', async ({ page }) => {
+  await page.setViewportSize({ width: 1280, height: 800 });
+  await page.locator('#btn-open-game').click();
+  await page.locator('#start-button').click();
+  await expect(page.locator('#game-screen')).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  const box = await page.locator('#game-screen').boundingBox();
+  expect(box).not.toBeNull();
+  // ステージは高さいっぱい、幅は高さ × 390/844、左右中央に置かれる
+  expect(Math.abs(box!.height - 800)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box!.width - (800 * 390) / 844)).toBeLessThanOrEqual(2);
+  expect(Math.abs(box!.x - (1280 - box!.width) / 2)).toBeLessThanOrEqual(2);
+  expect(Math.abs(box!.y)).toBeLessThanOrEqual(1);
+  // 歌詞はステージ内のジャケット（ステージ幅の正方形）のすぐ下に出る
+  const lyric = await page.locator('#lyrics').evaluate((el) => {
+    const stage = document.querySelector('#game-screen')!.getBoundingClientRect();
+    const r = el.getBoundingClientRect();
+    return { relTop: r.top - stage.top, stageWidth: stage.width, stageHeight: stage.height };
+  });
+  expect(lyric.relTop).toBeGreaterThanOrEqual(lyric.stageWidth);
+  expect(lyric.relTop).toBeLessThan(lyric.stageHeight * 0.82);
+});

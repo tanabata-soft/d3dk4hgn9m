@@ -645,6 +645,34 @@
   touch-action: none;
 }
 
+/* 広い画面（PC など）では、プレイ画面をスマホ比率（390:844）のステージにして
+   中央に置く（オーナー決定 2026-11-21「案B：スマホ比率のまま拡大」）。
+   レーン幅もノーツの落下距離も、比率までスマホと一致させる。余白は単色
+   （#view-game の背景）で、ステージには薄い影を付けて区切る。
+   幅 480px 以下（スマホ縦持ち）では今まで通り全画面のまま */
+@media (min-width: 481px) {
+  #view-game #game-screen {
+    margin: auto;
+    width: min(100vw, calc(100dvh * 390 / 844));
+    height: min(100dvh, calc(100vw * 844 / 390));
+    box-shadow: 0 0 64px rgb(0 0 0 / 0.65);
+  }
+
+  /* ステージの外（余白）にメニューのぼかし背景を出さない。
+     game-main.ts が選曲のたびに style.opacity を直接書くので、!important で勝つ */
+  #view-game:has(#game-screen:not([hidden])) .menu-bg {
+    opacity: 0 !important;
+  }
+
+  /* 歌詞はジャケット（ステージ幅いっぱいの正方形）のすぐ下に出す。
+     ステージ幅は高さ × 390/844 なので、top はステージ高さに対する比率で表す
+     （46.2085% = 390/844）。基本ルール（.lyrics の top）より後ろで勝つよう、
+     セレクタは #game-screen 経由で強めてある */
+  #view-game #game-screen .lyrics {
+    top: calc(46.2085% + 10px);
+  }
+}
+
 #view-game #game-canvas {
   display: block;
   width: 100%;
