@@ -54,7 +54,7 @@ export interface GameResult {
 
 export interface GameCallbacks {
   onFinish(result: GameResult): void;
-  /** 中断（確認カードで「中断する」を選んだ）でメニューに戻るとき */
+  /** 中断（確認カードで「メニューに戻る」を選んだ）でメニューに戻るとき */
   onAbort(): void;
   /** 中断の確認カードの開閉（開く=true。閉じるは「つづける」を押したとき） */
   onPause(open: boolean): void;
