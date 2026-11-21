@@ -463,6 +463,12 @@ export class Game {
     // スタート操作のジェスチャの中で呼ばれる前提で、まず音声を unlock する
     unlockAudio();
     const session = ++this.startSession;
+    // 前の演奏の最終フレーム（前の曲のジャケット背景）が、音の読み込み中に
+    // そのまま見えてしまうのを防ぐ。ゲーム画面への切替と同じ同期処理の中で
+    // 両キャンバスを地の色へ戻し、背景の参照も外しておく（オーナー指摘
+    // 2026-11-21: リズムゲーム開始直後に前の曲の背景が一瞬残る）
+    this.bg = null;
+    this.clearCanvases();
     const buf = await loadBuffer(entry.audioUrl);
     if (this.destroyed || session !== this.startSession) return;
     this.songBuf = buf;
@@ -567,6 +573,22 @@ export class Game {
     } finally {
       this.reiniting = false;
     }
+  }
+
+  /** 両キャンバスを地の色に戻す（start の冒頭で、前の演奏の残像を消すため）。
+   * 変換行列を外して実ピクセル全面を塗る: CSS 単位で塗ると、端数で右端・下端の
+   * 1ピクセルに前のフレームが残ることがあるため */
+  private clearCanvases(): void {
+    const { g, gn } = this;
+    g.save();
+    g.setTransform(1, 0, 0, 1, 0, 0);
+    g.fillStyle = '#0e1018';
+    g.fillRect(0, 0, this.canvas.width, this.canvas.height);
+    g.restore();
+    gn.save();
+    gn.setTransform(1, 0, 0, 1, 0, 0);
+    gn.clearRect(0, 0, this.notesCanvas.width, this.notesCanvas.height);
+    gn.restore();
   }
 
   /** 演奏を止めてメニューに戻る（結果は残さない） */

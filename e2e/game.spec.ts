@@ -127,6 +127,47 @@ test('ゲームが始まり、Canvas が表示され、中断ボタンで確認�
   await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
 });
 
+test('次の曲の読み込み中に、前の曲の画面（背景）が残らない', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await page.evaluate(() => {
+    const api = (window as unknown as { __pwaTest?: { finishNow?: () => void } }).__pwaTest;
+    api?.finishNow?.();
+  });
+  await expect(page.locator('#result-screen')).toBeVisible();
+  // キャンバス右上（スコア表示域）の最大輝度。前の演奏の最終フレームには白いスコアが残る
+  const stripMax = (): Promise<number> =>
+    page.evaluate(() => {
+      const c = document.getElementById('game-canvas') as HTMLCanvasElement;
+      const t = document.createElement('canvas');
+      t.width = c.width;
+      t.height = c.height;
+      const ctx = t.getContext('2d')!;
+      ctx.drawImage(c, 0, 0);
+      const x0 = Math.floor(c.width * 0.72);
+      const y0 = Math.floor(c.height * 0.015);
+      const d = ctx.getImageData(x0, y0, c.width - x0, Math.floor(c.height * 0.05)).data;
+      let max = 0;
+      for (let i = 0; i < d.length; i += 4) max = Math.max(max, d[i], d[i + 1], d[i + 2]);
+      return max;
+    });
+  expect(await stripMax()).toBeGreaterThan(200);
+  // 次の曲の音声読み込みを遅らせて、読み込み中の画面を見る
+  await page.route('**/*.mp3', async (route) => {
+    await new Promise((r) => setTimeout(r, 1500));
+    await route.continue();
+  });
+  await page.locator('#next-button').click();
+  await page.waitForTimeout(400);
+  // 読み込み中は地の色で消えていて、前の曲の画面は残っていない
+  expect(await stripMax()).toBeLessThan(64);
+  // 読み込みが終われば通常どおり始まる
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+});
+
 test('曲を変えるとメニューの背景ジャケットも即座に切り替わる', async ({ page }) => {
   await page.locator('#btn-open-game').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
