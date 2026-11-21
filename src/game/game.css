@@ -844,6 +844,24 @@
   white-space: nowrap;
 }
 
+/* 中断の確認カード（結果カードと同じ重ね方。オーナー指示 2026-11-21、案1） */
+#view-game .pause .pause-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin: 10px 0 4px;
+}
+
+#view-game .pause .pause-note {
+  color: var(--muted, #9aa3b2);
+  font-size: 0.9rem;
+  margin: 0 0 10px;
+}
+
+#view-game .pause .opt.danger {
+  color: #ff8f8f;
+  border-color: rgb(255 143 143 / 0.45);
+}
+
 /* 結果は別画面にせず、終わった演奏画面の上に重ねて出す（オーナー指示 2026-11-20）。
    カードの後ろは大きな影で全面を薄暗くし、演奏画面が透けて見える */#view-game .result {
   position: absolute;

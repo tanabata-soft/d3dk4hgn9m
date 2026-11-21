@@ -84,6 +84,8 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     // 結果は演奏画面の上に重ねるので、結果表示中も演奏画面は出したままにする
     $('game-screen').hidden = next === 'menu';
     $('result-screen').hidden = next !== 'result';
+    // 中断の確認カードは画面遷移では必ず閉じる（開くのは Game 側の onPause だけ）
+    $('pause-screen').hidden = true;
     setData('screen', next);
   }
 
@@ -320,16 +322,24 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     const rankEl = $('menu-best-rank');
     rankEl.textContent = rank ?? '—';
     rankEl.classList.toggle('none', !rank);
-    // 背景のぼかしジャケットを選曲に追随させる（曲が変わった時だけ、薄くフェードして差し替える）
+    // 背景のぼかしジャケットを選曲に即追随させる。以前はフェードアウト（180ms の
+    // 遅延＋0.35s の遷移）を挟んでいたため、曲を変えても前の曲の背景が一瞬残った
+    // （オーナー指摘 2026-11-21）。ジャケットはカルーセルのスライド画像として
+    // 読み込み済みのはずなので、その場で差し替える。未読込のときだけ、読み終わって
+    // から差し替える（その間は前の背景のまま。空白にはしない）。連続で切り替えた
+    // ときは、最後に選んだ曲以外は反映しない
     if (menuBgSong !== selectedSong) {
       menuBgSong = selectedSong;
       const bg = $('menu-bg');
-      bg.style.opacity = '0';
       const jacketUrl = songById(selectedSong).jacketUrl;
-      window.setTimeout(() => {
+      const img = new Image();
+      img.src = jacketUrl;
+      const apply = (): void => {
+        if (menuBgSong !== selectedSong) return;
         bg.style.backgroundImage = `url("${jacketUrl}")`;
-        bg.style.opacity = '1';
-      }, 180);
+      };
+      if (img.complete && img.naturalWidth > 0) apply();
+      else img.onload = apply;
     }
     $('offset-value').textContent = `${offsetMs > 0 ? '+' : ''}${offsetMs}ms`;
     renderToggle('vibrate-button', isVibrateOn());
@@ -558,19 +568,21 @@ function initGameMode(): { enter: () => void; exit: () => void } {
       show('menu');
       renderMenu();
     },
+    onPause: (open) => {
+      $('pause-screen').hidden = !open;
+    },
     onComboShow: (combo, appearance) => showComboShow(combo, appearance),
     onLyric: (index) => showLyric(index),
   });
 
-  // ---- Android の端スワイプ「戻る」対策（v1.2.2） ----
+  // ---- Android の端スワイプ「戻る」対策（v1.2.2、確認カード化は v1.2.7） ----
   // 端スワイプの「戻る」は OS が最優先で処理するため、発動自体は止められない。
   // 代わりに、ゲームモード中は履歴を1つ積んで popstate を捕捉し、「戻る」が
   // 来てもアプリを閉じさせず・画面遷移もさせずに、この場に留まる。
-  // プレイ中なら、バックグラウンドへ行ったときと同じ中断にする（演奏を止めて
-  // メニューへ戻す。このゲームにポーズ＝続きからの再開は無く、中断の扱いは
-  // visibilitychange の abort に揃えるのが既存の設計）。
-  // 本当にやめる操作（メニュー下部の「戻る」ボタン等で CD 側へ出る）ときは
-  // exit() が積んだ履歴を取り消し、通常の「戻る」に戻す。
+  // プレイ中なら、演奏を凍結して中断の確認カードを出す（オーナー指示 2026-11-21、
+  // 案1。中断ボタン・アプリ切替と同じ扱いに統一）。本当にやめる操作（メニュー
+  // 下部の「戻る」ボタン等で CD 側へ出る）ときは exit() が積んだ履歴を取り消し、
+  // 通常の「戻る」に戻す。
   let historyGuardArmed = false;
 
   function pushGuardState(): boolean {
@@ -590,7 +602,7 @@ function initGameMode(): { enter: () => void; exit: () => void } {
       historyGuardArmed = false;
       window.removeEventListener('popstate', onPopState);
     }
-    if (game.isPlaying) game.abort();
+    if (game.isPlaying) game.pause();
   };
 
   function armHistoryGuard(): void {
@@ -680,6 +692,13 @@ function initGameMode(): { enter: () => void; exit: () => void } {
   $('back-button').addEventListener('click', () => {
     show('menu');
     renderMenu();
+  });
+  // 中断の確認カード: 「つづける」は READY をはさんで再開、「中断する」は記録せずメニューへ
+  $('pause-resume-button').addEventListener('click', () => {
+    game.resume();
+  });
+  $('pause-abort-button').addEventListener('click', () => {
+    game.abort();
   });
 
   // 初回のタップで音声を unlock する（iPhone ではジェスチャの中で AudioContext を起こす必要がある）

@@ -104,7 +104,7 @@ test('選択を変えると確認音が鳴る', async ({ page }) => {
   await expect(page.evaluate(() => (window as unknown as { __uiSounds: number }).__uiSounds)).resolves.toBe(1);
 });
 
-test('ゲームが始まり、Canvas が表示され、左上タップでメニューに戻る', async ({ page }) => {
+test('ゲームが始まり、Canvas が表示され、中断ボタンで確認カードが出て中断できる', async ({ page }) => {
   await page.locator('#btn-open-game').click();
   await page.locator('#start-button').click();
   await expect(page.locator('#game-screen')).toBeVisible();
@@ -117,8 +117,86 @@ test('ゲームが始まり、Canvas が表示され、左上タップでメニ�
   });
   expect(lyricBox.top).toBeGreaterThanOrEqual(lyricBox.width);
   expect(lyricBox.top).toBeLessThan(lyricBox.height * 0.82);
-  // 左上の ✕ の場所をタップして中断する
-  await page.locator('#game-canvas').dispatchEvent('pointerdown', { clientX: 20, clientY: 20 });
+  // 左上の中断ボタンをタップすると、即座には戻らず確認カードが出る（案1）
+  await page.locator('#game-canvas').dispatchEvent('pointerdown', { clientX: 30, clientY: 29 });
+  await expect(page.locator('#pause-screen')).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
+  // 「中断する」でメニューに戻る
+  await page.locator('#pause-abort-button').click();
+  await expect(page.locator('#menu-screen')).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
+});
+
+test('曲を変えるとメニューの背景ジャケットも即座に切り替わる', async ({ page }) => {
+  await page.locator('#btn-open-game').click();
+  await expect(page.locator('#menu-screen')).toBeVisible();
+  const bgImage = (): Promise<string> =>
+    page.evaluate(() => getComputedStyle(document.getElementById('menu-bg')!).backgroundImage);
+  const slideFile = (song: string): Promise<string> =>
+    page.evaluate(
+      (s) =>
+        document
+          .querySelector(`.carousel-slide[data-song="${s}"] img`)!
+          .getAttribute('src')!
+          .split('/')
+          .pop()!,
+      song,
+    );
+  // 初期表示の背景は選択中の曲（先頭）のジャケット
+  await expect.poll(async () => (await bgImage()).includes(await slideFile('kogoe'))).toBe(true);
+  // ドットで別の曲へ: 背景も遅延なくその曲のジャケットになる（前の曲が残らない）
+  await page.locator('.carousel-dot[data-song="samurai"]').click();
+  await expect(page.locator('body')).toHaveAttribute('data-song', 'samurai');
+  await expect
+    .poll(async () => (await bgImage()).includes(await slideFile('samurai')), { timeout: 1_000 })
+    .toBe(true);
+});
+
+test('中断確認の「つづける」で、止めた位置から再開する', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  const songMs = (): Promise<number> =>
+    page.evaluate(
+      () =>
+        (window as unknown as { __pwaTest: { getGameState: () => { songMs: number } } }).__pwaTest.getGameState()
+          .songMs,
+    );
+  // 曲が少し進んでから止める
+  await expect.poll(songMs, { timeout: 30_000 }).toBeGreaterThan(300);
+  await page.locator('#game-canvas').dispatchEvent('pointerdown', { clientX: 30, clientY: 29 });
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
+  const frozen = await songMs();
+  expect(frozen).toBeGreaterThan(300);
+  // 凍結中は位置が進まない
+  await page.waitForTimeout(400);
+  expect(await songMs()).toBe(frozen);
+  // 「つづける」→ READY（約1秒）をはさんで再開し、止めた位置から進む
+  await page.locator('#pause-resume-button').click();
+  await expect(page.locator('#pause-screen')).toBeHidden();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 5_000 });
+  await expect.poll(songMs, { timeout: 5_000 }).toBeGreaterThan(frozen);
+});
+
+test('アプリ切替（画面が隠れる）と中断確認が出て、演奏は進まない', async ({ page }) => {
+  await page.locator('#btn-open-game').click();
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'hidden', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  await expect(page.locator('#pause-screen')).toBeVisible();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
+  await page.evaluate(() => {
+    Object.defineProperty(document, 'visibilityState', { value: 'visible', configurable: true });
+    document.dispatchEvent(new Event('visibilitychange'));
+  });
+  // 戻ってきてもカードは開いたまま。ここでは中断してメニューへ
+  await expect(page.locator('#pause-screen')).toBeVisible();
+  await page.locator('#pause-abort-button').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
 });
@@ -210,7 +288,7 @@ test('リズムゲーム画面からトップへ戻れる（設定の横の「�
   await expect(page.locator('#menu-screen')).toBeVisible();
 });
 
-test('プレイ中の「戻る」（端スワイプ）では閉じずにメニューへ戻り、退出後は履歴が掃除される', async ({ page }) => {
+test('プレイ中の「戻る」（端スワイプ）では閉じずに中断確認が出て、退出後は履歴が掃除される', async ({ page }) => {
   await page.locator('#btn-open-game').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
   // ゲームモード中は、端スワイプ対策の履歴ガードが積まれている
@@ -221,8 +299,12 @@ test('プレイ中の「戻る」（端スワイプ）では閉じずにメニ�
   await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
   // ブラウザの「戻る」＝ Android の端スワイプ「戻る」
   await page.goBack();
-  // アプリは閉じず、ゲーム画面に留まって、演奏は中断されメニューに戻る
+  // アプリは閉じず、ゲーム画面に留まって、中断の確認カードが出る（案1で統一）
   await expect(page.locator('body')).toHaveAttribute('data-view', 'game');
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
+  await expect(page.locator('#pause-screen')).toBeVisible();
+  // 「中断する」でメニューに戻る
+  await page.locator('#pause-abort-button').click();
   await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
   await expect(page.locator('#menu-screen')).toBeVisible();
   // ガードは積み直されているので、もう一度「戻る」を押しても閉じない
