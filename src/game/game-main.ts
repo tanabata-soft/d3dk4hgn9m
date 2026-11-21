@@ -666,6 +666,16 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     selectedDiff = lastDiff;
     void startGame();
   });
+  $('next-button').addEventListener('click', () => {
+    // 曲順（SONGS の並び＝トラック順）で次の曲へ。最後の曲の次は先頭に戻る
+    // （オーナー指示 2026-11-21）。難易度はいまの演奏のまま変えない
+    const next = SONGS[(slideIndex(lastEntry.id) + 1) % SONGS.length];
+    selectedSong = next.id;
+    selectedDiff = lastDiff;
+    save('song', selectedSong);
+    renderMenu();
+    void startGame();
+  });
   $('back-button').addEventListener('click', () => {
     show('menu');
     renderMenu();

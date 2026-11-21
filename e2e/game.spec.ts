@@ -151,6 +151,54 @@ test('結果は演奏画面の上に重なって出て、コンボ段階がコ�
   await expect(page.locator('#menu-best-rank')).toHaveText(/^[SABC]$/);
 });
 
+test('結果画面の「次の曲」で、難易度そのまま次の曲が始まる', async ({ page }) => {
+  // 結果へすぐ進めるよう、デバッグ API（finishNow）を使うため ?debug=1 で開き直す
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  // 2曲目（samurai）を難易度「むずかしい」で演奏する
+  await page.locator('.carousel-slide[data-song="samurai"]').click();
+  await expect(page.locator('body')).toHaveAttribute('data-song', 'samurai');
+  await page.locator('#diff-row [data-diff="hard"]').click();
+  await expect(page.locator('body')).toHaveAttribute('data-difficulty', 'hard');
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await page.evaluate(() => {
+    const api = (window as unknown as { __pwaTest?: { finishNow?: () => void } }).__pwaTest;
+    api?.finishNow?.();
+  });
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'result');
+  await expect(page.locator('#result-screen')).toBeVisible();
+  await expect(page.locator('#next-button')).toBeVisible();
+  // 「次の曲」: メニューを経由せず、3曲目（ginmaku）が同じ難易度で始まる
+  await page.locator('#next-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'game');
+  await expect(page.locator('body')).toHaveAttribute('data-song', 'ginmaku');
+  await expect(page.locator('body')).toHaveAttribute('data-difficulty', 'hard');
+  await expect(page.locator('#result-screen')).toBeHidden();
+});
+
+test('最後の曲の結果で「次の曲」を押すと先頭の曲に戻る', async ({ page }) => {
+  await page.goto('/?debug=1');
+  await expect(page.locator('#view-cover')).toBeVisible();
+  await page.locator('#btn-open-game').click();
+  // 最後の曲（actor）を選んで演奏する
+  await page.locator('.carousel-dot[data-song="actor"]').click();
+  await expect(page.locator('body')).toHaveAttribute('data-song', 'actor');
+  await page.locator('#start-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await page.evaluate(() => {
+    const api = (window as unknown as { __pwaTest?: { finishNow?: () => void } }).__pwaTest;
+    api?.finishNow?.();
+  });
+  await expect(page.locator('body')).toHaveAttribute('data-screen', 'result');
+  // 「次の曲」: 先頭の曲（kogoe）に回って演奏が始まる
+  await page.locator('#next-button').click();
+  await expect(page.locator('body')).toHaveAttribute('data-game', 'playing', { timeout: 30_000 });
+  await expect(page.locator('body')).toHaveAttribute('data-song', 'kogoe');
+});
+
 test('リズムゲーム画面からトップへ戻れる（設定の横の「戻る」ボタン）', async ({ page }) => {
   await page.locator('#btn-open-game').click();
   await expect(page.locator('#view-game')).toBeVisible();
