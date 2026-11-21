@@ -29,7 +29,7 @@ import {
   type DebugAction,
 } from '../debug';
 import { detectPlatform } from '../install';
-import { isSoundOn, playSwipeSound, playUiClick, preloadHitSample, setSound } from './sound';
+import { isSoundOn, playResultJingle, playSwipeSound, playUiClick, preloadHitSample, setSound } from './sound';
 import { isVibrateOn, setVibrate } from './haptics';
 import { audioContext, audioState, isUnlocked, unlockAudio } from './audio';
 import { load, migrateStorage, requestPersist, save } from './storage';
@@ -560,9 +560,16 @@ function initGameMode(): { enter: () => void; exit: () => void } {
   // ---- ゲーム ----
   const game = new Game($<HTMLCanvasElement>('game-canvas'), $<HTMLCanvasElement>('notes-canvas'), {
     onFinish: (result) => {
-      // フルコンボでも締めの演出は挟まず、結果へ直行する（フルコンボの印は
-      // 結果カードの中に出す。オーナー指示 2026-11-20）
-      showResult(result);
+      // 結果発表ジングル（アプリ内合成、オーナー指示 2026-11-21 で A 案採用）を
+      // 鳴らしてから結果カードを出す。効果音オフのときはジングルなし（待ちなし）で
+      // 即表示する。（2026-11-20 の「締めの演出は挟まず結果へ直行」はこの指示で置換。
+      // フルコンボの印は従来どおり結果カードの中に出す）
+      const waitMs = playResultJingle(result.rank);
+      if (waitMs > 0) {
+        window.setTimeout(() => showResult(result), waitMs);
+      } else {
+        showResult(result);
+      }
     },
     onAbort: () => {
       show('menu');
