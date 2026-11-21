@@ -121,7 +121,7 @@ test('ゲームが始まり、Canvas が表示され、中断ボタンで確認�
   await page.locator('#game-canvas').dispatchEvent('pointerdown', { clientX: 30, clientY: 29 });
   await expect(page.locator('#pause-screen')).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
-  // 「中断する」でメニューに戻る
+  // 「メニューに戻る」でメニューに戻る
   await page.locator('#pause-abort-button').click();
   await expect(page.locator('#menu-screen')).toBeVisible();
   await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
@@ -344,7 +344,7 @@ test('プレイ中の「戻る」（端スワイプ）では閉じずに中断�
   await expect(page.locator('body')).toHaveAttribute('data-view', 'game');
   await expect(page.locator('body')).toHaveAttribute('data-game', 'paused');
   await expect(page.locator('#pause-screen')).toBeVisible();
-  // 「中断する」でメニューに戻る
+  // 「メニューに戻る」でメニューに戻る
   await page.locator('#pause-abort-button').click();
   await expect(page.locator('body')).toHaveAttribute('data-game', 'menu');
   await expect(page.locator('#menu-screen')).toBeVisible();

@@ -693,7 +693,7 @@ function initGameMode(): { enter: () => void; exit: () => void } {
     show('menu');
     renderMenu();
   });
-  // 中断の確認カード: 「つづける」は READY をはさんで再開、「中断する」は記録せずメニューへ
+  // 中断の確認カード: 「つづける」は READY をはさんで再開、「メニューに戻る」は記録せずメニューへ
   $('pause-resume-button').addEventListener('click', () => {
     game.resume();
   });
