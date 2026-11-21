@@ -157,6 +157,17 @@
                   <button id="back-button" type="button" class="opt">メニューへ</button>
                 </div>
               </section>
+              <!-- 中断の確認カード（オーナー指示 2026-11-21、案1）。演奏中の「❚❚ 中断」ボタン・
+                   端スワイプの「戻る」・アプリ切替のどれでも、演奏を凍結してこのカードを出す。
+                   「つづける」は READY をはさんで止めた位置から再開する -->
+              <section id="pause-screen" class="card result pause" hidden aria-live="polite">
+                <p class="pause-title">演奏を中断しますか？</p>
+                <p class="pause-note">スコアは記録されません</p>
+                <div class="row">
+                  <button id="pause-resume-button" type="button" class="opt">つづける</button>
+                  <button id="pause-abort-button" type="button" class="opt danger">中断する</button>
+                </div>
+              </section>
               <p id="game-live" class="sr-only" aria-live="polite"></p>
             </div>
           </div>
@@ -169,7 +180,7 @@
             </div>
     
             <h3 class="sub-title">遊び方</h3>
-            <p class="note">ノーツが下の枠に重なったらタップ。長い帯は終わるまで押しっぱなし（パソコンは D / F / J / K）。演奏は左上の ✕ で中断できます。</p>
+            <p class="note">ノーツが下の枠に重なったらタップ。長い帯は終わるまで押しっぱなし（パソコンは D / F / J / K）。演奏は左上の「❚❚ 中断」で止められます（確認が出て、続きから再開もできます）。</p>
     
             <h3 class="sub-title">タイミング調整（オフセット）</h3>
             <div class="offset-row">
