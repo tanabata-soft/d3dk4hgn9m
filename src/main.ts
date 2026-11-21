@@ -610,7 +610,7 @@ setupUpdateBanner($('#update-banner'), $('#update-button'), $('#update-later'));
     });
   }, 600);
 }
-const installButtons = ['#install-open', '#install-open-cover']
+const installButtons = ['#install-open-cover']
   .map((sel) => document.querySelector<HTMLButtonElement>(sel))
   .filter((b): b is HTMLButtonElement => b !== null);
 setupInstallGuide(

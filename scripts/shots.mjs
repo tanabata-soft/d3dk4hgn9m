@@ -22,8 +22,7 @@ const SCREENS = [
   {
     name: 'install',
     open: async (page) => {
-      await page.click('#btn-open-booklet');
-      await page.click('#install-open');
+      await page.click('#install-open-cover');
     },
   },
 ];

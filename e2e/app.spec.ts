@@ -171,25 +171,27 @@ test('更新バナーは通常は隠れていて、「あとで」で閉じら�
   await expect(page.locator('#update-banner')).toBeHidden();
 });
 
-test('ブックレットの末尾からインストール方法を開ける（使っている端末の説明が開いている）', async ({ page }) => {
+test('ブックレットにはインストール入口が無い（入口はトップ画面のみ）', async ({ page }) => {
   await page.goto('/');
   await page.getByRole('button', { name: 'ブックレット' }).click();
-  await page.getByRole('button', { name: /インストールする方法/ }).click();
+  await expect(page.locator('#install-open')).toHaveCount(0);
+});
+
+test('トップ画面からインストール方法を開ける（ダイアログは画面中央に出る）', async ({ page }) => {
+  await page.goto('/');
+  await page.locator('#install-open-cover').click();
   const dialog = page.locator('#install-dialog');
   await expect(dialog).toBeVisible();
   // Pixel 7 のプロファイルなので Android の説明が開いている
   await expect(dialog.locator('details[data-platform="android"]')).toHaveJSProperty('open', true);
   await expect(dialog.locator('details[data-platform="ios"]')).toHaveJSProperty('open', false);
-  await dialog.getByRole('button', { name: 'とじる' }).click();
-  await expect(dialog).toBeHidden();
-});
-
-test('トップ画面からもインストール方法を開ける', async ({ page }) => {
-  await page.goto('/');
-  await page.locator('#install-open-cover').click();
-  const dialog = page.locator('#install-dialog');
-  await expect(dialog).toBeVisible();
-  await expect(dialog.locator('details[data-platform="android"]')).toHaveJSProperty('open', true);
+  // 全体リセット（* { margin: 0 }）で dialog のセンタリングが消える事故の回帰防止
+  const box = await dialog.boundingBox();
+  const vp = page.viewportSize();
+  expect(box).not.toBeNull();
+  expect(vp).not.toBeNull();
+  expect(Math.abs(box!.x + box!.width / 2 - vp!.width / 2)).toBeLessThanOrEqual(1);
+  expect(Math.abs(box!.y + box!.height / 2 - vp!.height / 2)).toBeLessThanOrEqual(1);
   await dialog.getByRole('button', { name: 'とじる' }).click();
   await expect(dialog).toBeHidden();
 });
