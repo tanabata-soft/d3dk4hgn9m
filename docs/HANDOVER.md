@@ -10,6 +10,7 @@
 
 - 差し替え: フリック音＝テンプレート標準の合成シャキーン B → H2 サンプル（src/game/assets/flick-sample.wav を追加、blob SHA は NK-S006 と一致。判定・tier のピッチ変化は playbackRate で付ける）、結果発表ジングル＝合成ファンファーレ → オーナー提供ファイル（result-jingle.mp3 を追加。結果カードを出すまでの待ち時間は差し替え前と同じ通常 1260ms／S 1480ms）、ゲームオーバー音＝合成（短調の下行4音）→ オーナー提供ファイル（game-over.mp3 を追加。待ち時間 1500ms 不変）。src/game/sound.ts は NK-S006 現行版とバイト同一にそろい、game-main.ts は演奏開始時の先読み3件（フリック／ジングル／ゲームオーバー）を追加、tests/sound.test.ts も NK-S006 版に置き換え。tests/game-data.test.ts のフリック音テスト1件は H2 サンプル版（テンプレート v1.8.1 と同内容）に追随させた。達成ボイス2種とヒット音サンプルは NK-S006 と同一 blob のため変更なし。譜面・歌詞・ジャケット・NK-001 固有仕様は変更なし。
 - 検証: `npm run verify` 通過（lint／単体テスト 96件／build／check:dist／check:content。新音源3点が dist と Service Worker の precache に入ることを確認）。e2e 47件全通過。
+- 公開記録: PR #43 を squash マージ（merge commit e3353919af045e368dae7bc8748a73ece0bcb196）。CI（check 1分9秒 / e2e 2分35秒）通過、GitHub Pages 配信確認済み（配信中バンドル assets/index-C1FbCEbs.js がローカル build と md5 一致し "1.3.1" を含む、新音源3点も live で 200・実サイズ配信、HTTP 200）。
 
 ## v1.3.0 テンプレートエンジン v1.8.0 標準一式の適用＋譜面 v6-3 再生成（2026-11-23）
 
