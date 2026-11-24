@@ -21,7 +21,7 @@
   - `tracks.ts`: 曲目・解説(正本)
   - `sync.ts`: 歌詞の同期データ(各 mp4 の字幕から生成した生成物)
   - `media.ts`: 曲ごとの画像・音源の対応
-  - `assets/`: 画像と音源(mp4)。`jacket.jpg` / `back.jpg` / `bg.jpg` と `trackNN.jpg` / `trackNN.mp4` の固定スロット
+  - `assets/`: 画像と音源(mp3)。`jacket.jpg` / `back.jpg` / `bg.jpg` と `trackNN.jpg` / `trackNN.mp3` の固定スロット
 - `src/logic.ts`: 純関数のロジック(時刻整形、曲順の循環、歌詞の現在行、ブックレット構成)
 - `src/main.ts`: 画面と再生の制御
 

@@ -375,7 +375,7 @@ def get_hpss_pyin(y, sr):
 #     「持続的」。既定 0.50。sustain_lo: 持続度がこれ以下で「打撃的」。既定 0.30）
 SONGS = {
     # 雛形の仮データ（テンプレートシングルの2曲。新作では収録曲に書き換える）。
-    # 音源は src/game/assets/track0N.mp3（CD 側の MP4 から音声だけを MP3
+    # 音源は src/game/assets/track0N.mp3（制作入口で用意した唯一の正規音源 MP3
     # 192kbps で書き出したもの。雛形のゲーム側仮音源だけは、譜面生成の検証に
     # 使えるよう打音のある合成曲を scripts/make-sample-game-audio.py で作った）。
     # FEVER（サビ）区間は、歌詞（src/album/sync.ts）の反復ブロックから決める:

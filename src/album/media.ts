@@ -11,17 +11,17 @@ import img08 from './assets/img/track08.jpg';
 import img09 from './assets/img/track09.jpg';
 import img10 from './assets/img/track10.jpg';
 import img11 from './assets/img/track11.jpg';
-import audio01 from './assets/audio/track01.mp4';
-import audio02 from './assets/audio/track02.mp4';
-import audio03 from './assets/audio/track03.mp4';
-import audio04 from './assets/audio/track04.mp4';
-import audio05 from './assets/audio/track05.mp4';
-import audio06 from './assets/audio/track06.mp4';
-import audio07 from './assets/audio/track07.mp4';
-import audio08 from './assets/audio/track08.mp4';
-import audio09 from './assets/audio/track09.mp4';
-import audio10 from './assets/audio/track10.mp4';
-import audio11 from './assets/audio/track11.mp4';
+import audio01 from './assets/audio/track01.mp3';
+import audio02 from './assets/audio/track02.mp3';
+import audio03 from './assets/audio/track03.mp3';
+import audio04 from './assets/audio/track04.mp3';
+import audio05 from './assets/audio/track05.mp3';
+import audio06 from './assets/audio/track06.mp3';
+import audio07 from './assets/audio/track07.mp3';
+import audio08 from './assets/audio/track08.mp3';
+import audio09 from './assets/audio/track09.mp3';
+import audio10 from './assets/audio/track10.mp3';
+import audio11 from './assets/audio/track11.mp3';
 
 /** 曲ごとのジャケット画像（TRACKS と同じ順） */
 export const TRACK_IMG: string[] = [img01, img02, img03, img04, img05, img06, img07, img08, img09, img10, img11];
