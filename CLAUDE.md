@@ -17,7 +17,7 @@ PWA アプリ(ツール/ゲーム)の共通テンプレート。**新しいア�
 - **バージョン表示とインストール入口は、ブックレット末尾(奥付のそば)に置く。** テンプレートの既定は「最初の画面」だが、カバー画面はジャケットの世界観だけで構成する決まりのため。`check:dist` は DOM に要素があるかで判定するので適合する。
 - **記録を持たないアプリなので、`src/storage.ts`・`src/backup.ts`(バックアップ UI)・`src/sound.ts`(効果音)は持たない。** 保存するのはデバッグモードのオン/オフだけ(`src/debug.ts` が自分のキーで管理)。
 - **アイコンは表ジャケットの絵から作った PNG を正本として `public/icons/` に置く。** `scripts/make-icons.mjs` は図形生成ではなく寸法チェックのみ(作り直し手順は同ファイルのコメント参照)。maskable は絵を中央 80% に置き、周囲を藍色で埋めた専用品。
-- **音源(mp4、全曲で約100MB)は事前キャッシュに入れない。** Service Worker の実行時キャッシュ(CacheFirst + レンジ要求対応、キャッシュ名 `kiso-album-audio`)で、再生した曲からキャッシュする。画像は事前キャッシュに含める。
+- **音源(mp3)は事前キャッシュに入れない。** Service Worker の実行時キャッシュ(CacheFirst + レンジ要求対応、キャッシュ名 `kiso-album-audio`)で、再生した曲からキャッシュする。画像は事前キャッシュに含める。
 - **プレビュー(`npm run build:preview`)は、音源を 96kbps に再エンコードしてから埋め込む**(単一 HTML が重くなりすぎるため。`scripts/build-preview.mjs` の差し替えプラグイン。ffmpeg が無い環境では元の音源のまま)。
 - **歌詞データ `src/album/sync.ts` は生成物。** 各 mp4 に収められた字幕をもとに生成した(生成手順は `docs/HANDOVER.md`)。曲目の正本は `src/album/tracks.ts` で、キーと曲数の整合は `scripts/content-checks.mjs`(sync-keys / media-count)と `tests/data.test.ts` が確かめる。
 
